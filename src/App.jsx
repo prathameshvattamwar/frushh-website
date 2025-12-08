@@ -1,5 +1,66 @@
+import { useState, useEffect } from 'react'
+import { supabase } from './lib/supabase'
+
 function App() {
-  const whatsapp = "https://wa.me/919271981229?text=Hi!%20I%20want%20to%20order%20FRUSHH%20protein%20shake"
+  const [products, setProducts] = useState([])
+  const [testimonials, setTestimonials] = useState([])
+  const [currentTestimonial, setCurrentTestimonial] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  const whatsapp = "https://wa.me/91XXXXXXXXXX?text=Hi!%20I%20want%20to%20order%20FRUSHH%20protein%20shake"
+
+  // Fetch data from Supabase
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        // Fetch Products
+        const { data: productsData } = await supabase
+          .from('products')
+          .select('*')
+          .eq('is_available', true)
+          .order('display_order')
+        
+        if (productsData) setProducts(productsData)
+
+        // Fetch Testimonials
+        const { data: testimonialsData } = await supabase
+          .from('testimonials')
+          .select('*')
+          .eq('is_active', true)
+          .order('display_order')
+        
+        if (testimonialsData) setTestimonials(testimonialsData)
+
+        setLoading(false)
+      } catch (error) {
+        console.error('Error fetching data:', error)
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [])
+
+  // Testimonial rotation
+  useEffect(() => {
+    if (testimonials.length > 0) {
+      const interval = setInterval(() => {
+        setCurrentTestimonial((prev) => (prev + 1) % testimonials.length)
+      }, 4000)
+      return () => clearInterval(interval)
+    }
+  }, [testimonials])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-green-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-6xl mb-4">🥤</div>
+          <div className="text-2xl font-bold text-green-600">Loading FRUSHH...</div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-green-50">
@@ -72,92 +133,40 @@ function App() {
         </div>
       </section>
 
-      {/* Menu */}
+      {/* Menu - FROM DATABASE */}
       <section id="menu" className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-black text-center text-gray-900 mb-4">4 Signature Flavors</h2>
+          <h2 className="text-3xl md:text-4xl font-black text-center text-gray-900 mb-4">
+            {products.length} Signature Flavors
+          </h2>
           <p className="text-center text-gray-600 mb-12">Each shake made fresh with premium ingredients!</p>
           
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Product 1 */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg text-center hover:shadow-xl transition">
-              <div className="text-6xl mb-4">🥜</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Classic Peanut Power</h3>
-              <p className="text-gray-500 text-sm mb-4">Peanut butter, banana & oats</p>
-              <div className="flex justify-around border-t pt-4">
-                <div>
-                  <div className="text-xs text-gray-400">250ml LITE</div>
-                  <div className="font-bold text-green-600 text-lg">₹79</div>
-                  <div className="text-xs text-gray-500">15g protein</div>
+            {products.map((product) => (
+              <div key={product.id} className="bg-white rounded-2xl p-6 shadow-lg text-center hover:shadow-xl transition">
+                <div className="text-6xl mb-4">
+                  {product.slug === 'peanut-power' && '🥜'}
+                  {product.slug === 'chocolate-muscle' && '🍫'}
+                  {product.slug === 'dry-fruit-deluxe' && '🌰'}
+                  {product.slug === 'muesli-energy' && '🥣'}
                 </div>
-                <div className="w-px bg-gray-200"></div>
-                <div>
-                  <div className="text-xs text-gray-400">350ml POWER</div>
-                  <div className="font-bold text-green-600 text-lg">₹99</div>
-                  <div className="text-xs text-gray-500">22g protein</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Product 2 */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg text-center hover:shadow-xl transition">
-              <div className="text-6xl mb-4">🍫</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Chocolate Muscle</h3>
-              <p className="text-gray-500 text-sm mb-4">Rich cocoa with dates</p>
-              <div className="flex justify-around border-t pt-4">
-                <div>
-                  <div className="text-xs text-gray-400">250ml LITE</div>
-                  <div className="font-bold text-green-600 text-lg">₹79</div>
-                  <div className="text-xs text-gray-500">17g protein</div>
-                </div>
-                <div className="w-px bg-gray-200"></div>
-                <div>
-                  <div className="text-xs text-gray-400">350ml POWER</div>
-                  <div className="font-bold text-green-600 text-lg">₹99</div>
-                  <div className="text-xs text-gray-500">24g protein</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{product.name}</h3>
+                <p className="text-gray-500 text-sm mb-4">{product.description}</p>
+                <div className="flex justify-around border-t pt-4">
+                  <div>
+                    <div className="text-xs text-gray-400">250ml LITE</div>
+                    <div className="font-bold text-green-600 text-lg">₹{product.price_250ml}</div>
+                    <div className="text-xs text-gray-500">{product.protein_250ml}g protein</div>
+                  </div>
+                  <div className="w-px bg-gray-200"></div>
+                  <div>
+                    <div className="text-xs text-gray-400">350ml POWER</div>
+                    <div className="font-bold text-green-600 text-lg">₹{product.price_350ml}</div>
+                    <div className="text-xs text-gray-500">{product.protein_350ml}g protein</div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Product 3 */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg text-center hover:shadow-xl transition">
-              <div className="text-6xl mb-4">🌰</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Dry Fruit Deluxe</h3>
-              <p className="text-gray-500 text-sm mb-4">Almonds, cashews & dates</p>
-              <div className="flex justify-around border-t pt-4">
-                <div>
-                  <div className="text-xs text-gray-400">250ml LITE</div>
-                  <div className="font-bold text-green-600 text-lg">₹79</div>
-                  <div className="text-xs text-gray-500">17g protein</div>
-                </div>
-                <div className="w-px bg-gray-200"></div>
-                <div>
-                  <div className="text-xs text-gray-400">350ml POWER</div>
-                  <div className="font-bold text-green-600 text-lg">₹99</div>
-                  <div className="text-xs text-gray-500">24g protein</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Product 4 */}
-            <div className="bg-white rounded-2xl p-6 shadow-lg text-center hover:shadow-xl transition">
-              <div className="text-6xl mb-4">🥣</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Muesli Energy</h3>
-              <p className="text-gray-500 text-sm mb-4">Oats, muesli & honey</p>
-              <div className="flex justify-around border-t pt-4">
-                <div>
-                  <div className="text-xs text-gray-400">250ml LITE</div>
-                  <div className="font-bold text-green-600 text-lg">₹79</div>
-                  <div className="text-xs text-gray-500">15g protein</div>
-                </div>
-                <div className="w-px bg-gray-200"></div>
-                <div>
-                  <div className="text-xs text-gray-400">350ml POWER</div>
-                  <div className="font-bold text-green-600 text-lg">₹99</div>
-                  <div className="text-xs text-gray-500">21g protein</div>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -211,7 +220,7 @@ function App() {
               </a>
             </div>
 
-            {/* Weekly - Featured */}
+            {/* Weekly */}
             <div className="bg-white rounded-2xl p-8 text-center shadow-xl border-4 border-green-400 transform md:scale-105">
               <div className="bg-green-500 text-white text-sm font-bold px-4 py-1 rounded-full inline-block mb-4">POPULAR</div>
               <div className="text-5xl mb-4">⚡</div>
@@ -252,55 +261,33 @@ function App() {
         </div>
       </section>
 
-      {/* Daily Quiz Teaser */}
-      <section className="py-16 px-4 bg-green-600">
-        <div className="max-w-4xl mx-auto text-center text-white">
-          <div className="text-6xl mb-6">🧠</div>
-          <h2 className="text-3xl md:text-4xl font-black mb-4">Daily Protein Quiz</h2>
-          <p className="text-xl opacity-90 mb-6">
-            Answer 1 question daily. Get 7 correct in a row = FREE ₹49 Shake!
-          </p>
-          <div className="bg-white rounded-2xl p-6 text-gray-900 max-w-md mx-auto">
-            <p className="text-sm text-green-600 font-medium mb-2">TODAY'S QUESTION</p>
-            <p className="font-bold mb-4">Peanut butter madhe kiti protein aste per 100g?</p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div className="bg-gray-100 py-2 rounded-lg">A) 5g</div>
-              <div className="bg-gray-100 py-2 rounded-lg">B) 15g</div>
-              <div className="bg-green-500 text-white py-2 rounded-lg font-bold">C) 25g ✓</div>
-              <div className="bg-gray-100 py-2 rounded-lg">D) 35g</div>
-            </div>
-            <p className="text-sm text-gray-500 mt-4">🔥 Streak: 5 days - 2 more for FREE shake!</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-black text-center text-gray-900 mb-12">What People Say</h2>
-          
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="bg-green-50 rounded-2xl p-6">
-              <div className="text-2xl mb-4">⭐⭐⭐⭐⭐</div>
-              <p className="text-gray-700 italic mb-4">"Finally a protein shake that tastes like homemade! No artificial taste."</p>
-              <p className="font-bold text-gray-900">Komal Molak</p>
-              <p className="text-sm text-gray-500">Hadapsar</p>
-            </div>
-            <div className="bg-green-50 rounded-2xl p-6">
-              <div className="text-2xl mb-4">⭐⭐⭐⭐⭐</div>
-              <p className="text-gray-700 italic mb-4">"Under ₹99 for this quality? Unbelievable! Chocolate Muscle is my favorite."</p>
-              <p className="font-bold text-gray-900">Shubham Sharma</p>
-              <p className="text-sm text-gray-500">Hadapsar</p>
-            </div>
-            <div className="bg-green-50 rounded-2xl p-6">
-              <div className="text-2xl mb-4">⭐⭐⭐⭐⭐</div>
-              <p className="text-gray-700 italic mb-4">"22g protein without any powder - amazing! Changed my post-workout routine."</p>
-              <p className="font-bold text-gray-900">Ajay Chavan</p>
-              <p className="text-sm text-gray-500">Hadapsar</p>
+      {/* Testimonials - FROM DATABASE */}
+      {testimonials.length > 0 && (
+        <section className="py-16 px-4 bg-white">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl md:text-4xl font-black text-center text-gray-900 mb-12">What People Say</h2>
+            
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-green-50 rounded-2xl p-8 text-center">
+                <div className="text-3xl mb-4">⭐⭐⭐⭐⭐</div>
+                <p className="text-xl text-gray-700 italic mb-6">"{testimonials[currentTestimonial]?.text}"</p>
+                <p className="font-bold text-gray-900">{testimonials[currentTestimonial]?.name}</p>
+                <p className="text-sm text-gray-500">{testimonials[currentTestimonial]?.location}</p>
+                
+                <div className="flex justify-center gap-2 mt-6">
+                  {testimonials.map((_, idx) => (
+                    <button 
+                      key={idx} 
+                      onClick={() => setCurrentTestimonial(idx)}
+                      className={`h-2 rounded-full transition-all ${idx === currentTestimonial ? 'bg-green-500 w-6' : 'bg-gray-300 w-2'}`}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="py-16 px-4 bg-green-50 text-center">
@@ -309,7 +296,7 @@ function App() {
         <a href={whatsapp} target="_blank" className="inline-block bg-green-500 text-white px-10 py-5 rounded-2xl text-xl font-bold hover:bg-green-600 hover:scale-105 transition-all shadow-lg">
           📱 Order on WhatsApp
         </a>
-        <p className="text-gray-500 mt-4">Or call: +91 92719 81229</p>
+        <p className="text-gray-500 mt-4">Or call: +91 XXXXXXXXXX</p>
       </section>
 
       {/* Footer */}
@@ -330,7 +317,7 @@ function App() {
             <div>
               <h4 className="font-bold mb-4">Contact</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li>📱 +91 92719 81229</li>
+                <li>📱 +91 XXXXXXXXXX</li>
                 <li>📧 hello@frushh.in</li>
                 <li>📍 Hadapsar, Pune</li>
               </ul>
@@ -347,7 +334,7 @@ function App() {
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
             <p>FSSAI License: XXXXXXXXXX</p>
-            <p className="mt-2">© 2026 FRUSHH. Made with 💚 in Pune</p>
+            <p className="mt-2">© 2024 FRUSHH. Made with 💚 in Pune</p>
           </div>
         </div>
       </footer>
