@@ -309,7 +309,7 @@ function App() {
         <a href={whatsapp} target="_blank" className="inline-block bg-green-500 text-white px-10 py-5 rounded-2xl text-xl font-bold hover:bg-green-600 hover:scale-105 transition-all shadow-lg">
           📱 Order on WhatsApp
         </a>
-        <p className="text-gray-500 mt-4">Or call: +91 99999 99999</p>
+        <p className="text-gray-500 mt-4">Or call: +91 92719 81229</p>
       </section>
 
       {/* Footer */}
