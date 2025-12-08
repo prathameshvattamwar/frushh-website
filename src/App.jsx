@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
+import Quiz from './components/Quiz'
 
 function App() {
   const [products, setProducts] = useState([])
