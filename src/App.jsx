@@ -7,7 +7,7 @@ function App() {
   const [currentTestimonial, setCurrentTestimonial] = useState(0)
   const [loading, setLoading] = useState(true)
 
-  const whatsapp = "https://wa.me/91XXXXXXXXXX?text=Hi!%20I%20want%20to%20order%20FRUSHH%20protein%20shake"
+  const whatsapp = "https://wa.me/919271981229?text=Hi!%20I%20want%20to%20order%20FRUSHH%20protein%20shake"
 
   // Fetch data from Supabase
   useEffect(() => {
@@ -296,7 +296,7 @@ function App() {
         <a href={whatsapp} target="_blank" className="inline-block bg-green-500 text-white px-10 py-5 rounded-2xl text-xl font-bold hover:bg-green-600 hover:scale-105 transition-all shadow-lg">
           📱 Order on WhatsApp
         </a>
-        <p className="text-gray-500 mt-4">Or call: +91 XXXXXXXXXX</p>
+        <p className="text-gray-500 mt-4">Or call: +91 9271981229</p>
       </section>
 
       {/* Footer */}
@@ -317,7 +317,7 @@ function App() {
             <div>
               <h4 className="font-bold mb-4">Contact</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li>📱 +91 XXXXXXXXXX</li>
+                <li>📱 +91 9271981229</li>
                 <li>📧 hello@frushh.in</li>
                 <li>📍 Hadapsar, Pune</li>
               </ul>
