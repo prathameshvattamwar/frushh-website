@@ -262,6 +262,9 @@ function App() {
         </div>
       </section>
 
+      {/* Daily Quiz */}
+      <Quiz whatsapp={whatsapp} />
+      
       {/* Testimonials - FROM DATABASE */}
       {testimonials.length > 0 && (
         <section className="py-16 px-4 bg-white">
