@@ -8,6 +8,7 @@ function Quiz({ whatsapp }) {
   const [isCorrect, setIsCorrect] = useState(false)
   const [streak, setStreak] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     fetchTodayQuestion()
@@ -16,19 +17,28 @@ function Quiz({ whatsapp }) {
 
   async function fetchTodayQuestion() {
     try {
+      // Get random question
       const { data, error } = await supabase
         .from('quiz_questions')
         .select('*')
         .eq('is_active', true)
-        .limit(1)
-        .single()
 
-      if (data) {
-        setQuestion(data)
+      if (error) {
+        console.error('Supabase error:', error)
+        setError(error.message)
+        setLoading(false)
+        return
+      }
+
+      if (data && data.length > 0) {
+        // Pick random question
+        const randomIndex = Math.floor(Math.random() * data.length)
+        setQuestion(data[randomIndex])
       }
       setLoading(false)
-    } catch (error) {
-      console.error('Error fetching question:', error)
+    } catch (err) {
+      console.error('Error fetching question:', err)
+      setError(err.message)
       setLoading(false)
     }
   }
@@ -74,7 +84,7 @@ function Quiz({ whatsapp }) {
 
   function getButtonStyle(option) {
     if (!isAnswered) {
-      return 'bg-green-50 hover:bg-green-100 text-gray-800'
+      return 'bg-green-50 hover:bg-green-100 text-gray-800 cursor-pointer'
     }
     if (option === question.correct_option) {
       return 'bg-green-500 text-white'
@@ -85,19 +95,47 @@ function Quiz({ whatsapp }) {
     return 'bg-gray-100 text-gray-400'
   }
 
+  // Show loading state
   if (loading) {
     return (
-      <section className="py-16 px-4 bg-green-600">
+      <section className="py-16 px-4 bg-gradient-to-r from-green-600 to-green-500">
         <div className="max-w-4xl mx-auto text-center text-white">
-          <div className="text-4xl mb-4">🧠</div>
-          <p>Loading Quiz...</p>
+          <div className="text-6xl mb-4">🧠</div>
+          <h2 className="text-3xl font-black mb-4">Daily Protein Quiz</h2>
+          <p>Loading question...</p>
         </div>
       </section>
     )
   }
 
+  // Show error state
+  if (error) {
+    return (
+      <section className="py-16 px-4 bg-gradient-to-r from-green-600 to-green-500">
+        <div className="max-w-4xl mx-auto text-center text-white">
+          <div className="text-6xl mb-4">🧠</div>
+          <h2 className="text-3xl font-black mb-4">Daily Protein Quiz</h2>
+          <p className="text-white/80">Quiz loading... Please refresh the page.</p>
+        </div>
+      </section>
+    )
+  }
+
+  // Show fallback if no question
   if (!question) {
-    return null
+    return (
+      <section className="py-16 px-4 bg-gradient-to-r from-green-600 to-green-500">
+        <div className="max-w-4xl mx-auto text-center text-white">
+          <div className="text-6xl mb-4">🧠</div>
+          <h2 className="text-3xl font-black mb-4">Daily Protein Quiz</h2>
+          <p className="text-xl mb-4">Answer 7 questions correctly = FREE ₹49 Shake!</p>
+          <div className="bg-white rounded-2xl p-6 max-w-md mx-auto text-gray-800">
+            <p className="font-bold mb-2">Coming Soon!</p>
+            <p className="text-gray-600">New quiz questions every day!</p>
+          </div>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -183,26 +221,24 @@ function Quiz({ whatsapp }) {
                   <p className="text-green-600 text-sm mt-1">{question.explanation}</p>
                   {streak >= 7 ? (
                     <div className="mt-3">
-                      <p className="text-green-700 font-bold">🎉 Congratulations! You earned a FREE shake!</p>
+                      <p className="text-green-700 font-bold">🎉 You earned a FREE shake!</p>
                       
-                        href={whatsapp + "&text=Hi!%20I%20completed%207-day%20quiz%20streak!%20Claim%20my%20FREE%20shake%20🎉"}
+                        href={`${whatsapp}&text=Hi!%20I%20completed%207-day%20quiz%20streak!%20Claim%20FREE%20shake%20🎉`}
                         target="_blank"
-                        className="inline-block mt-2 bg-green-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-600 transition"
+                        className="inline-block mt-2 bg-green-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-600"
                       >
                         Claim FREE Shake 🥤
                       </a>
                     </div>
                   ) : (
-                    <p className="text-green-600 mt-2">
-                      🔥 {7 - streak} more correct answers for FREE shake!
-                    </p>
+                    <p className="text-green-600 mt-2">🔥 {7 - streak} more for FREE shake!</p>
                   )}
                 </div>
               ) : (
                 <div>
-                  <p className="text-red-700 font-bold text-lg">❌ Oops! Wrong answer</p>
+                  <p className="text-red-700 font-bold text-lg">❌ Wrong answer!</p>
                   <p className="text-red-600 text-sm mt-1">
-                    Correct answer: {question.correct_option.toUpperCase()}) {question[`option_${question.correct_option}`]}
+                    Correct: {question.correct_option.toUpperCase()}) {question[`option_${question.correct_option}`]}
                   </p>
                   <p className="text-red-600 text-sm mt-1">{question.explanation}</p>
                   <p className="text-red-600 mt-2">Streak reset! Try again tomorrow 💪</p>
@@ -210,16 +246,9 @@ function Quiz({ whatsapp }) {
               )}
             </div>
           )}
-
-          {/* Already Answered Today */}
-          {isAnswered && !selectedAnswer && (
-            <div className="mt-6 p-4 rounded-xl bg-blue-100">
-              <p className="text-blue-700">You already answered today! Come back tomorrow for a new question 🌅</p>
-            </div>
-          )}
         </div>
 
-        <p className="text-white/70 text-sm mt-6">New question every day at 12:00 PM!</p>
+        <p className="text-white/70 text-sm mt-6">New question every day!</p>
       </div>
     </section>
   )
