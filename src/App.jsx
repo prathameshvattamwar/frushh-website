@@ -338,7 +338,7 @@ function App() {
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
             <p>FSSAI License: XXXXXXXXXX</p>
-            <p className="mt-2">© 2024 FRUSHH. Made with 💚 in Pune</p>
+            <p className="mt-2">© 2026 FRUSHH. Made with 💚 in Pune</p>
           </div>
         </div>
       </footer>
