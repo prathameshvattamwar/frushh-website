@@ -8,7 +8,6 @@ function Quiz({ whatsapp }) {
   const [isCorrect, setIsCorrect] = useState(false)
   const [streak, setStreak] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
 
   useEffect(() => {
     fetchTodayQuestion()
@@ -17,28 +16,18 @@ function Quiz({ whatsapp }) {
 
   async function fetchTodayQuestion() {
     try {
-      // Get random question
       const { data, error } = await supabase
         .from('quiz_questions')
         .select('*')
         .eq('is_active', true)
 
-      if (error) {
-        console.error('Supabase error:', error)
-        setError(error.message)
-        setLoading(false)
-        return
-      }
-
       if (data && data.length > 0) {
-        // Pick random question
         const randomIndex = Math.floor(Math.random() * data.length)
         setQuestion(data[randomIndex])
       }
       setLoading(false)
     } catch (err) {
-      console.error('Error fetching question:', err)
-      setError(err.message)
+      console.error('Error:', err)
       setLoading(false)
     }
   }
@@ -95,7 +84,6 @@ function Quiz({ whatsapp }) {
     return 'bg-gray-100 text-gray-400'
   }
 
-  // Show loading state
   if (loading) {
     return (
       <section className="py-16 px-4 bg-gradient-to-r from-green-600 to-green-500">
@@ -108,30 +96,15 @@ function Quiz({ whatsapp }) {
     )
   }
 
-  // Show error state
-  if (error) {
-    return (
-      <section className="py-16 px-4 bg-gradient-to-r from-green-600 to-green-500">
-        <div className="max-w-4xl mx-auto text-center text-white">
-          <div className="text-6xl mb-4">🧠</div>
-          <h2 className="text-3xl font-black mb-4">Daily Protein Quiz</h2>
-          <p className="text-white/80">Quiz loading... Please refresh the page.</p>
-        </div>
-      </section>
-    )
-  }
-
-  // Show fallback if no question
   if (!question) {
     return (
       <section className="py-16 px-4 bg-gradient-to-r from-green-600 to-green-500">
         <div className="max-w-4xl mx-auto text-center text-white">
           <div className="text-6xl mb-4">🧠</div>
           <h2 className="text-3xl font-black mb-4">Daily Protein Quiz</h2>
-          <p className="text-xl mb-4">Answer 7 questions correctly = FREE ₹49 Shake!</p>
+          <p className="text-xl mb-4">Answer 7 questions correctly = FREE Shake!</p>
           <div className="bg-white rounded-2xl p-6 max-w-md mx-auto text-gray-800">
-            <p className="font-bold mb-2">Coming Soon!</p>
-            <p className="text-gray-600">New quiz questions every day!</p>
+            <p className="font-bold">Coming Soon!</p>
           </div>
         </div>
       </section>
@@ -144,30 +117,21 @@ function Quiz({ whatsapp }) {
         <div className="text-6xl mb-6">🧠</div>
         <h2 className="text-3xl md:text-4xl font-black mb-4">Daily Protein Quiz</h2>
         <p className="text-xl opacity-90 mb-2">
-          Answer correctly for 7 days = <span className="font-bold underline">FREE ₹49 Shake!</span>
+          Answer correctly for 7 days = FREE ₹49 Shake!
         </p>
         
-        {/* Streak Display */}
         <div className="flex justify-center items-center gap-2 mb-8">
           <span className="text-2xl">🔥</span>
           <span className="text-xl font-bold">Streak: {streak}/7 days</span>
-          {streak >= 7 && (
-            <span className="bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold ml-2">
-              🎉 FREE SHAKE EARNED!
-            </span>
-          )}
         </div>
 
-        {/* Streak Progress Bar */}
         <div className="max-w-md mx-auto mb-8">
           <div className="flex justify-between mb-2">
             {[1, 2, 3, 4, 5, 6, 7].map((day) => (
               <div
                 key={day}
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                  day <= streak
-                    ? 'bg-yellow-400 text-yellow-900'
-                    : 'bg-white/20 text-white/60'
+                  day <= streak ? 'bg-yellow-400 text-yellow-900' : 'bg-white/20 text-white/60'
                 }`}
               >
                 {day <= streak ? '✓' : day}
@@ -176,9 +140,8 @@ function Quiz({ whatsapp }) {
           </div>
         </div>
         
-        {/* Quiz Card */}
         <div className="bg-white rounded-3xl p-6 md:p-8 max-w-2xl mx-auto text-gray-900 shadow-2xl">
-          <div className="text-sm text-green-600 font-medium mb-2">TODAY'S QUESTION</div>
+          <div className="text-sm text-green-600 font-medium mb-2">TODAY&apos;S QUESTION</div>
           <h3 className="text-lg md:text-xl font-bold mb-6">{question.question}</h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -212,38 +175,19 @@ function Quiz({ whatsapp }) {
             </button>
           </div>
 
-          {/* Result Message */}
-          {isAnswered && (
-            <div className={`mt-6 p-4 rounded-xl ${isCorrect ? 'bg-green-100' : 'bg-red-100'}`}>
-              {isCorrect ? (
-                <div>
-                  <p className="text-green-700 font-bold text-lg">✅ Correct! Well done!</p>
-                  <p className="text-green-600 text-sm mt-1">{question.explanation}</p>
-                  {streak >= 7 ? (
-                    <div className="mt-3">
-                      <p className="text-green-700 font-bold">🎉 You earned a FREE shake!</p>
-                      
-                        href={`${whatsapp}&text=Hi!%20I%20completed%207-day%20quiz%20streak!%20Claim%20FREE%20shake%20🎉`}
-                        target="_blank"
-                        className="inline-block mt-2 bg-green-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-green-600"
-                      >
-                        Claim FREE Shake 🥤
-                      </a>
-                    </div>
-                  ) : (
-                    <p className="text-green-600 mt-2">🔥 {7 - streak} more for FREE shake!</p>
-                  )}
-                </div>
-              ) : (
-                <div>
-                  <p className="text-red-700 font-bold text-lg">❌ Wrong answer!</p>
-                  <p className="text-red-600 text-sm mt-1">
-                    Correct: {question.correct_option.toUpperCase()}) {question[`option_${question.correct_option}`]}
-                  </p>
-                  <p className="text-red-600 text-sm mt-1">{question.explanation}</p>
-                  <p className="text-red-600 mt-2">Streak reset! Try again tomorrow 💪</p>
-                </div>
-              )}
+          {isAnswered && isCorrect && (
+            <div className="mt-6 p-4 rounded-xl bg-green-100">
+              <p className="text-green-700 font-bold text-lg">✅ Correct!</p>
+              <p className="text-green-600 text-sm mt-1">{question.explanation}</p>
+              <p className="text-green-600 mt-2">🔥 {7 - streak} more for FREE shake!</p>
+            </div>
+          )}
+
+          {isAnswered && !isCorrect && (
+            <div className="mt-6 p-4 rounded-xl bg-red-100">
+              <p className="text-red-700 font-bold text-lg">❌ Wrong!</p>
+              <p className="text-red-600 text-sm mt-1">{question.explanation}</p>
+              <p className="text-red-600 mt-2">Streak reset! Try tomorrow 💪</p>
             </div>
           )}
         </div>
