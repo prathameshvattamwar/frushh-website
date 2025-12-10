@@ -169,7 +169,7 @@ function App() {
               </button>
             )}
 
-            
+            <a
               href={whatsapp}
               target="_blank"
               rel="noopener noreferrer"
