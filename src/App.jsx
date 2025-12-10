@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { useAuth } from './context/AuthContext'
 import Quiz from './components/Quiz'
-import LoginModal from './components/auth/LoginModal'
+import LoginModal from './components/auth/LoginModal' 
 
 function App() {
   const [products, setProducts] = useState([])
