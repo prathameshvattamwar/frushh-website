@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from './lib/supabase'
 import { useAuth } from './context/AuthContext'
 import Quiz from './components/Quiz'
-import LoginModal from './components/auth/LoginModal' 
+import LoginModal from './components/auth/LoginModal'
 
 function App() {
   const [products, setProducts] = useState([])
@@ -12,16 +12,15 @@ function App() {
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [addons, setAddons] = useState([])
+  const [showUserMenu, setShowUserMenu] = useState(false)
 
   const { user, openLogin, logout } = useAuth()
 
   const whatsapp = "https://wa.me/919271638630?text=Hi!%20I%20want%20to%20order%20FRUSHH%20protein%20shake"
 
-  // Fetch data from Supabase
   useEffect(() => {
     async function fetchData() {
       try {
-        // Fetch products
         const { data: productsData } = await supabase
           .from('products')
           .select('*')
@@ -30,7 +29,6 @@ function App() {
 
         if (productsData) setProducts(productsData)
 
-        // Fetch testimonials
         const { data: testimonialsData } = await supabase
           .from('testimonials')
           .select('*')
@@ -39,7 +37,6 @@ function App() {
 
         if (testimonialsData) setTestimonials(testimonialsData)
 
-        // Fetch categories
         const { data: categoriesData } = await supabase
           .from('categories')
           .select('*')
@@ -48,7 +45,6 @@ function App() {
 
         if (categoriesData) setCategories(categoriesData)
 
-        // Fetch addons
         const { data: addonsData } = await supabase
           .from('addons')
           .select('*')
@@ -67,7 +63,6 @@ function App() {
     fetchData()
   }, [])
 
-  // Auto-rotate testimonials
   useEffect(() => {
     if (testimonials.length > 1) {
       const interval = setInterval(() => {
@@ -77,12 +72,10 @@ function App() {
     }
   }, [testimonials])
 
-  // Filter products by category
   const filteredProducts = selectedCategory === 'all' 
     ? products 
     : products.filter(p => p.category === selectedCategory)
 
-  // Product emoji/icon mapping
   const productIcons = {
     'peanut-power': 'fa-solid fa-jar',
     'chocolate-muscle': 'fa-solid fa-mug-hot',
@@ -104,71 +97,73 @@ function App() {
   return (
     <div className="min-h-screen bg-white">
       
-      {/* Login Modal */}
       <LoginModal />
 
       {/* Navbar */}
       <nav className="bg-white shadow-sm sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-          {/* Logo */}
           <div className="flex items-center gap-2">
             <i className="fa-solid fa-glass-water text-2xl text-green-500"></i>
             <span className="text-xl font-black text-gray-800">FRUSHH</span>
           </div>
 
-          {/* Right Side */}
           <div className="flex items-center gap-3">
             {user ? (
-              // Logged in - Show user menu
               <div className="flex items-center gap-3">
                 <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600">
                   <i className="fa-solid fa-coins text-yellow-500"></i>
                   <span className="font-medium">50 pts</span>
                 </div>
-                <div className="relative group">
-                  <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition">
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition"
+                  >
                     <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
                       {user.name ? user.name.charAt(0).toUpperCase() : <i className="fa-solid fa-user text-sm"></i>}
                     </div>
                     <span className="hidden sm:block text-sm font-medium text-gray-700">
-                      {user.name || 'Complete Profile'}
+                      {user.name || 'Profile'}
                     </span>
                     <i className="fa-solid fa-chevron-down text-xs text-gray-400"></i>
                   </button>
                   
-                  {/* Dropdown Menu */}
-                  <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-                    <div className="p-2">
-                      <a href="#" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg">
-                        <i className="fa-solid fa-user w-4"></i>
-                        My Profile
-                      </a>
-                      <a href="#" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg">
-                        <i className="fa-solid fa-receipt w-4"></i>
-                        My Orders
-                      </a>
-                      <a href="#" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg">
-                        <i className="fa-solid fa-coins w-4 text-yellow-500"></i>
-                        Rewards
-                      </a>
-                      <a href="#" className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg">
-                        <i className="fa-solid fa-gift w-4 text-pink-500"></i>
-                        Refer & Earn
-                      </a>
-                      <hr className="my-2" />
-                      <button 
-                        onClick={logout}
-                        className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg w-full"
-                      >
-                        <i className="fa-solid fa-right-from-bracket w-4"></i>
-                        Logout
-                      </button>
+                  {showUserMenu && (
+                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border z-50">
+                      <div className="p-2">
+                        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                          <i className="fa-solid fa-user w-4"></i>
+                          My Profile
+                        </button>
+                        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                          <i className="fa-solid fa-receipt w-4"></i>
+                          My Orders
+                        </button>
+                        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                          <i className="fa-solid fa-coins w-4 text-yellow-500"></i>
+                          Rewards
+                        </button>
+                        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
+                          <i className="fa-solid fa-gift w-4 text-pink-500"></i>
+                          Refer and Earn
+                        </button>
+                        <hr className="my-2" />
+                        <button 
+                          onClick={() => {
+                            logout()
+                            setShowUserMenu(false)
+                          }}
+                          className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg w-full text-left"
+                        >
+                          <i className="fa-solid fa-right-from-bracket w-4"></i>
+                          Logout
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             ) : (
-              // Not logged in - Show login button
               <button
                 onClick={openLogin}
                 className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition"
@@ -178,10 +173,10 @@ function App() {
               </button>
             )}
 
-            {/* Order Button */}
-            
+            <a
               href={whatsapp}
               target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition"
             >
               <i className="fa-brands fa-whatsapp"></i>
@@ -196,27 +191,27 @@ function App() {
         <div className="max-w-6xl mx-auto text-center">
           <div className="inline-block px-4 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium mb-4">
             <i className="fa-solid fa-leaf mr-2"></i>
-            100% Natural • No Whey Powder
+            100% Natural - No Whey Powder
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-gray-900 mb-4">
             Fresh Protein Shakes
           </h1>
           <p className="text-3xl md:text-4xl font-black text-green-500 mb-6">
-            Under ₹99!
+            Under Rs.99!
           </p>
           <p className="text-lg text-gray-600 mb-8 max-w-xl mx-auto">
             Real ingredients. Real protein. Made fresh daily and delivered to your gym. No artificial supplements!
           </p>
-          
+          <a
             href={whatsapp}
             target="_blank"
+            rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-8 py-4 bg-green-500 text-white text-lg font-bold rounded-xl hover:bg-green-600 transition shadow-lg hover:shadow-xl"
           >
             <i className="fa-solid fa-glass-water"></i>
-            Try First Shake @ ₹49
+            Try First Shake @ Rs.49
           </a>
 
-          {/* USP Icons */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-12 max-w-3xl mx-auto">
             <div className="text-center">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -250,7 +245,7 @@ function App() {
       {categories.length > 0 && (
         <section className="py-6 px-4 bg-white border-b">
           <div className="max-w-6xl mx-auto">
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2">
               {categories.map((category) => (
                 <button
                   key={category.id}
@@ -289,12 +284,12 @@ function App() {
                 <div className="flex justify-center gap-4 mb-4">
                   <div className="text-center">
                     <p className="text-xs text-gray-400">250ml</p>
-                    <p className="font-bold text-green-600">₹{product.price_250ml}</p>
+                    <p className="font-bold text-green-600">Rs.{product.price_250ml}</p>
                     <p className="text-xs text-gray-500">{product.protein_250ml}g protein</p>
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-gray-400">350ml</p>
-                    <p className="font-bold text-green-600">₹{product.price_350ml}</p>
+                    <p className="font-bold text-green-600">Rs.{product.price_350ml}</p>
                     <p className="text-xs text-gray-500">{product.protein_350ml}g protein</p>
                   </div>
                 </div>
@@ -304,7 +299,6 @@ function App() {
                     if (!user) {
                       openLogin()
                     } else {
-                      // TODO: Add to cart
                       window.open(whatsapp, '_blank')
                     }
                   }}
@@ -335,7 +329,7 @@ function App() {
                     <i className={`${addon.icon} text-green-600`}></i>
                   </div>
                   <p className="text-sm font-medium text-gray-800">{addon.name}</p>
-                  <p className="text-green-600 font-bold">+₹{addon.price}</p>
+                  <p className="text-green-600 font-bold">+Rs.{addon.price}</p>
                 </div>
               ))}
             </div>
@@ -351,7 +345,6 @@ function App() {
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Weekly Plan */}
             <div className="bg-gray-800 rounded-2xl p-6">
               <div className="text-center mb-4">
                 <i className="fa-solid fa-bolt text-yellow-400 text-3xl mb-2"></i>
@@ -359,7 +352,7 @@ function App() {
                 <p className="text-gray-400 text-sm">6 shakes per week</p>
               </div>
               <div className="text-center mb-4">
-                <span className="text-4xl font-black">₹449</span>
+                <span className="text-4xl font-black">Rs.449</span>
                 <span className="text-gray-400">/week</span>
               </div>
               <ul className="space-y-2 mb-6">
@@ -376,12 +369,16 @@ function App() {
                   1 skip day allowed
                 </li>
               </ul>
-              <a href={whatsapp} target="_blank" className="block w-full py-3 bg-green-500 text-center font-bold rounded-lg hover:bg-green-600 transition">
+              <a 
+                href={whatsapp} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block w-full py-3 bg-green-500 text-center font-bold rounded-lg hover:bg-green-600 transition"
+              >
                 Subscribe Now
               </a>
             </div>
 
-            {/* Monthly Plan - Featured */}
             <div className="bg-green-500 rounded-2xl p-6 transform md:-translate-y-4">
               <div className="text-center mb-4">
                 <span className="inline-block px-3 py-1 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full mb-2">MOST POPULAR</span>
@@ -390,7 +387,7 @@ function App() {
                 <p className="text-green-100 text-sm">26 shakes per month</p>
               </div>
               <div className="text-center mb-4">
-                <span className="text-4xl font-black">₹1,799</span>
+                <span className="text-4xl font-black">Rs.1,799</span>
                 <span className="text-green-100">/month</span>
               </div>
               <ul className="space-y-2 mb-6">
@@ -411,12 +408,16 @@ function App() {
                   Priority delivery
                 </li>
               </ul>
-              <a href={whatsapp} target="_blank" className="block w-full py-3 bg-white text-green-600 text-center font-bold rounded-lg hover:bg-gray-100 transition">
+              <a 
+                href={whatsapp} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block w-full py-3 bg-white text-green-600 text-center font-bold rounded-lg hover:bg-gray-100 transition"
+              >
                 Subscribe Now
               </a>
             </div>
 
-            {/* Daily Plan */}
             <div className="bg-gray-800 rounded-2xl p-6">
               <div className="text-center mb-4">
                 <i className="fa-solid fa-glass-water text-blue-400 text-3xl mb-2"></i>
@@ -424,7 +425,7 @@ function App() {
                 <p className="text-gray-400 text-sm">Single shake trial</p>
               </div>
               <div className="text-center mb-4">
-                <span className="text-4xl font-black">₹49</span>
+                <span className="text-4xl font-black">Rs.49</span>
                 <span className="text-gray-400">/shake</span>
               </div>
               <ul className="space-y-2 mb-6">
@@ -441,7 +442,12 @@ function App() {
                   No commitment
                 </li>
               </ul>
-              <a href={whatsapp} target="_blank" className="block w-full py-3 bg-green-500 text-center font-bold rounded-lg hover:bg-green-600 transition">
+              <a 
+                href={whatsapp} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="block w-full py-3 bg-green-500 text-center font-bold rounded-lg hover:bg-green-600 transition"
+              >
                 Order Now
               </a>
             </div>
@@ -469,11 +475,16 @@ function App() {
                   <i className="fa-solid fa-star text-yellow-400"></i>
                   <i className="fa-solid fa-star text-yellow-400"></i>
                 </div>
-                <p className="text-xl text-gray-700 italic mb-6">"{testimonials[currentTestimonial]?.text}"</p>
-                <p className="font-bold text-gray-900">{testimonials[currentTestimonial]?.name}</p>
-                <p className="text-sm text-gray-500">{testimonials[currentTestimonial]?.location}</p>
+                <p className="text-xl text-gray-700 italic mb-6">
+                  {testimonials[currentTestimonial] && `"${testimonials[currentTestimonial].text}"`}
+                </p>
+                <p className="font-bold text-gray-900">
+                  {testimonials[currentTestimonial] && testimonials[currentTestimonial].name}
+                </p>
+                <p className="text-sm text-gray-500">
+                  {testimonials[currentTestimonial] && testimonials[currentTestimonial].location}
+                </p>
 
-                {/* Dots */}
                 <div className="flex justify-center gap-2 mt-6">
                   {testimonials.map((_, idx) => (
                     <button
@@ -507,10 +518,10 @@ function App() {
             <div>
               <h4 className="font-bold mb-4">Quick Links</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition">Menu</a></li>
-                <li><a href="#" className="hover:text-white transition">Subscription Plans</a></li>
-                <li><a href="#" className="hover:text-white transition">Rewards</a></li>
-                <li><a href="#" className="hover:text-white transition">Refer & Earn</a></li>
+                <li><span className="hover:text-white transition cursor-pointer">Menu</span></li>
+                <li><span className="hover:text-white transition cursor-pointer">Subscription Plans</span></li>
+                <li><span className="hover:text-white transition cursor-pointer">Rewards</span></li>
+                <li><span className="hover:text-white transition cursor-pointer">Refer and Earn</span></li>
               </ul>
             </div>
             <div>
@@ -524,9 +535,10 @@ function App() {
             </div>
             <div>
               <h4 className="font-bold mb-4">Contact Us</h4>
-              
+              <a
                 href={whatsapp}
                 target="_blank"
+                rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-4 py-2 bg-green-500 rounded-lg hover:bg-green-600 transition"
               >
                 <i className="fa-brands fa-whatsapp text-xl"></i>
@@ -536,19 +548,28 @@ function App() {
           </div>
           
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400 text-sm">
-            <p>© 2024 FRUSHH. Made with <i className="fa-solid fa-heart text-red-500"></i> in Pune</p>
+            <p>2024 FRUSHH. Made with <i className="fa-solid fa-heart text-red-500"></i> in Pune</p>
           </div>
         </div>
       </footer>
 
       {/* Floating WhatsApp Button */}
-      
+      <a
         href={whatsapp}
         target="_blank"
+        rel="noopener noreferrer"
         className="fixed bottom-6 right-6 w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 transition z-50"
       >
         <i className="fa-brands fa-whatsapp text-white text-3xl"></i>
       </a>
+
+      {/* Click outside to close user menu */}
+      {showUserMenu && (
+        <div 
+          className="fixed inset-0 z-30" 
+          onClick={() => setShowUserMenu(false)}
+        />
+      )}
 
     </div>
   )
