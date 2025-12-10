@@ -12,7 +12,7 @@ function App() {
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [addons, setAddons] = useState([])
-  const [showUserMenu, setShowUserMenu] = useState(false)
+  // const [showUserMenu, setShowUserMenu] = useState(false)
 
   const { user, openLogin, logout } = useAuth()
 
@@ -99,6 +99,7 @@ function App() {
       
       <LoginModal />
 
+      {/* Navbar */}
       <nav className="bg-white shadow-sm sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -108,73 +109,21 @@ function App() {
 
           <div className="flex items-center gap-3">
             {user ? (
-              <div className="flex items-center gap-3">
-                <div className="hidden sm:flex items-center gap-2 text-sm text-gray-600">
-                  <i className="fa-solid fa-coins text-yellow-500"></i>
-                  <span className="font-medium">50 pts</span>
+              <button onClick={logout} className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+                <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </div>
-                <div className="relative">
-                  <button 
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition"
-                  >
-                    <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-bold">
-                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                    </div>
-                    <span className="hidden sm:block text-sm font-medium text-gray-700">
-                      {user.name || 'Profile'}
-                    </span>
-                    <i className="fa-solid fa-chevron-down text-xs text-gray-400"></i>
-                  </button>
-                  
-                  {showUserMenu && (
-                    <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-lg border z-50">
-                      <div className="p-2">
-                        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                          <i className="fa-solid fa-user w-4"></i>
-                          My Profile
-                        </button>
-                        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                          <i className="fa-solid fa-receipt w-4"></i>
-                          My Orders
-                        </button>
-                        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                          <i className="fa-solid fa-coins w-4 text-yellow-500"></i>
-                          Rewards
-                        </button>
-                        <button className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 rounded-lg w-full text-left">
-                          <i className="fa-solid fa-gift w-4 text-pink-500"></i>
-                          Refer and Earn
-                        </button>
-                        <hr className="my-2" />
-                        <button 
-                          onClick={() => { logout(); setShowUserMenu(false); }}
-                          className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg w-full text-left"
-                        >
-                          <i className="fa-solid fa-right-from-bracket w-4"></i>
-                          Logout
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
+                <span className="hidden sm:inline">{user.name || 'User'}</span>
+                <i className="fa-solid fa-right-from-bracket text-gray-400"></i>
+              </button>
             ) : (
-              <button
-                onClick={openLogin}
-                className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition"
-              >
+              <button onClick={openLogin} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition">
                 <i className="fa-solid fa-user"></i>
                 <span className="hidden sm:inline">Login</span>
               </button>
             )}
 
-            <a
-              href={whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition"
-            >
+            <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">
               <i className="fa-brands fa-whatsapp"></i>
               <span className="hidden sm:inline">Order Now</span>
             </a>
@@ -435,7 +384,6 @@ function App() {
         <i className="fa-brands fa-whatsapp text-white text-3xl"></i>
       </a>
 
-      {showUserMenu && <div className="fixed inset-0 z-30" onClick={() => setShowUserMenu(false)} />}
     </div>
   )
 }
