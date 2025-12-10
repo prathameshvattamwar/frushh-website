@@ -16,7 +16,7 @@ function App() {
 
   const { user, openLogin, logout } = useAuth()
 
-  const whatsapp = "https://wa.me/919271638630?text=Hi!%20I%20want%20to%20order%20FRUSHH%20protein%20shake"
+  const whatsapp = "https://wa.me/919271981229?text=Hi!%20I%20want%20to%20order%20FRUSHH%20protein%20shake"
 
   useEffect(() => {
     async function fetchData() {
