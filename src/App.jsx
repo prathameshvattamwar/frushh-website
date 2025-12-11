@@ -3,6 +3,8 @@ import { supabase } from './lib/supabase'
 import { useAuth } from './context/AuthContext'
 import Quiz from './components/Quiz'
 import LoginModal from './components/auth/LoginModal'
+import CartSidebar from './components/cart/CartSidebar'
+import { useCart } from './context/CartContext'
 
 function App() {
   const [products, setProducts] = useState([])
@@ -15,6 +17,7 @@ function App() {
   // const [showUserMenu, setShowUserMenu] = useState(false)
 
   const { user, openLogin, logout } = useAuth()
+  const { cartCount, openCart, addToCart } = useCart()
 
   const whatsapp = "https://wa.me/919271981229?text=Hi!%20I%20want%20to%20order%20FRUSHH%20protein%20shake"
 
@@ -98,6 +101,7 @@ function App() {
     <div className="min-h-screen bg-white">
       
       <LoginModal />
+      <CartSidebar />
 
       {/* Navbar */}
       <nav className="bg-white shadow-sm sticky top-0 z-40">
@@ -122,6 +126,13 @@ function App() {
                 <span className="hidden sm:inline">Login</span>
               </button>
             )}
+
+            <button onClick={openCart} className="relative flex items-center gap-2 px-3 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
+              <i className="fa-solid fa-cart-shopping"></i>
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 text-white text-xs font-bold rounded-full flex items-center justify-center">{cartCount}</span>
+              )}
+            </button>
 
             <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition">
               <i className="fa-brands fa-whatsapp"></i>
@@ -218,7 +229,7 @@ function App() {
                     <p className="text-xs text-gray-500">{product.protein_350ml}g protein</p>
                   </div>
                 </div>
-                <button onClick={() => { if (!user) { openLogin() } else { window.open(whatsapp, '_blank') } }} className="w-full py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2">
+                <button onClick={() => { addToCart(product, '250ml', []); }} className="w-full py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2">
                   <i className="fa-solid fa-cart-plus"></i>
                   Add to Cart
                 </button>
