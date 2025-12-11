@@ -4,6 +4,7 @@ import { useAuth } from './context/AuthContext'
 import Quiz from './components/Quiz'
 import LoginModal from './components/auth/LoginModal'
 import CartSidebar from './components/cart/CartSidebar'
+import ProductModal from './components/products/ProductModal'
 import { useCart } from './context/CartContext'
 
 function App() {
@@ -14,10 +15,11 @@ function App() {
   const [categories, setCategories] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [addons, setAddons] = useState([])
-  // const [showUserMenu, setShowUserMenu] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [isProductModalOpen, setIsProductModalOpen] = useState(false)
 
   const { user, openLogin, logout } = useAuth()
-  const { cartCount, openCart, addToCart } = useCart()
+  const { cartCount, openCart } = useCart()
 
   const whatsapp = "https://wa.me/919271981229?text=Hi!%20I%20want%20to%20order%20FRUSHH%20protein%20shake"
 
@@ -102,6 +104,12 @@ function App() {
       
       <LoginModal />
       <CartSidebar />
+      <ProductModal 
+        product={selectedProduct} 
+        addons={addons} 
+        isOpen={isProductModalOpen} 
+        onClose={() => setIsProductModalOpen(false)} 
+      />
 
       {/* Navbar */}
       <nav className="bg-white shadow-sm sticky top-0 z-40">
@@ -229,7 +237,7 @@ function App() {
                     <p className="text-xs text-gray-500">{product.protein_350ml}g protein</p>
                   </div>
                 </div>
-                <button onClick={() => { addToCart(product, '250ml', []); }} className="w-full py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2">
+                <button onClick={() => { setSelectedProduct(product); setIsProductModalOpen(true); }} className="w-full py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2">
                   <i className="fa-solid fa-cart-plus"></i>
                   Add to Cart
                 </button>
