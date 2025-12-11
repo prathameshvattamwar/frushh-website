@@ -3,7 +3,7 @@ import { useCart } from '../../context/CartContext'
 function CartSidebar() {
   const { cartItems, cartCount, cartTotal, isCartOpen, closeCart, removeFromCart, updateQuantity, clearCart } = useCart()
 
-  const whatsapp = "https://wa.me/919271638630"
+  const whatsapp = "https://wa.me/919271981229"
 
   const productIcons = {
     'peanut-power': 'fa-solid fa-jar',
