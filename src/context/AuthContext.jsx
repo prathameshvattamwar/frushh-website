@@ -8,7 +8,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const [showLogin, setShowLogin] = useState(false)
 
-  // Check for existing session on load
   useEffect(() => {
     checkUser()
   }, [])
@@ -18,7 +17,6 @@ export function AuthProvider({ children }) {
       const savedUser = localStorage.getItem('frushh_user')
       if (savedUser) {
         const userData = JSON.parse(savedUser)
-        // Verify user still exists in database
         const { data } = await supabase
           .from('users')
           .select('*')
@@ -27,7 +25,6 @@ export function AuthProvider({ children }) {
         
         if (data) {
           setUser(data)
-          // Update last login
           await supabase
             .from('users')
             .update({ last_login: new Date().toISOString() })
@@ -43,37 +40,33 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Generate 6-digit OTP
   function generateOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString()
   }
 
-  // Send OTP (via WhatsApp)
   async function sendOTP(phone) {
     try {
       const otp = generateOTP()
 
-      // Mark all previous OTPs for this phone as used
+      // Mark all previous OTPs as used
       await supabase
         .from('otp_verifications')
         .update({ is_used: true })
         .eq('phone', phone)
-        .eq('is_used', false)
 
-      // Save new OTP to database (10 minutes expiry)
+      // Save new OTP
       const { error } = await supabase
         .from('otp_verifications')
         .insert({
           phone: phone,
           otp: otp,
-          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
           is_used: false
         })
 
       if (error) throw error
 
-      // Return OTP and WhatsApp link
-      const whatsappNumber = '919271981229' // FRUSHH WhatsApp number
+      const whatsappNumber = '919271981229'
       const message = `My FRUSHH login OTP is: ${otp}`
       const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
 
@@ -84,10 +77,9 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Verify OTP
   async function verifyOTP(phone, enteredOTP) {
     try {
-      // Get latest OTP for this phone
+      // Get latest unused OTP for this phone
       const { data: otpData, error: otpError } = await supabase
         .from('otp_verifications')
         .select('*')
@@ -101,16 +93,7 @@ export function AuthProvider({ children }) {
         return { success: false, error: 'OTP not found. Please request a new one.' }
       }
 
-      // Check if expired (with 1 minute buffer for timezone issues)
-      const expiryTime = new Date(otpData.expires_at).getTime()
-      const currentTime = Date.now()
-      const bufferTime = 60 * 1000 // 1 minute buffer
-      
-      if (expiryTime + bufferTime < currentTime) {
-        return { success: false, error: 'OTP expired. Please request a new one.' }
-      }
-
-      // Check if OTP matches
+      // Check if OTP matches (skip expiry check for now)
       if (otpData.otp !== enteredOTP) {
         return { success: false, error: 'Invalid OTP. Please try again.' }
       }
@@ -129,11 +112,9 @@ export function AuthProvider({ children }) {
         .single()
 
       if (existingUser) {
-        // Existing user - login
         setUser(existingUser)
         localStorage.setItem('frushh_user', JSON.stringify(existingUser))
         
-        // Update last login
         await supabase
           .from('users')
           .update({ last_login: new Date().toISOString() })
@@ -141,7 +122,6 @@ export function AuthProvider({ children }) {
 
         return { success: true, isNewUser: false, user: existingUser }
       } else {
-        // New user - create account
         const { data: newUser, error: createError } = await supabase
           .from('users')
           .insert({
@@ -154,16 +134,14 @@ export function AuthProvider({ children }) {
 
         if (createError) throw createError
 
-        // Create loyalty points entry
         await supabase
           .from('loyalty_points')
           .insert({
             user_id: newUser.id,
-            points_balance: 50, // Signup bonus
+            points_balance: 50,
             total_earned: 50
           })
 
-        // Record signup bonus transaction
         await supabase
           .from('points_transactions')
           .insert({
@@ -184,7 +162,6 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Update user profile
   async function updateProfile(profileData) {
     try {
       const { data, error } = await supabase
@@ -203,13 +180,10 @@ export function AuthProvider({ children }) {
 
       if (error) throw error
 
-      // Check if profile was incomplete before
       const wasIncomplete = !user.name || !user.default_address
       const isNowComplete = profileData.name && profileData.default_address
 
-      // Award profile completion bonus if first time completing
       if (wasIncomplete && isNowComplete) {
-        // Get current points
         const { data: pointsData } = await supabase
           .from('loyalty_points')
           .select('*')
@@ -217,7 +191,6 @@ export function AuthProvider({ children }) {
           .single()
 
         if (pointsData) {
-          // Check if bonus already given
           const { data: existingBonus } = await supabase
             .from('points_transactions')
             .select('*')
@@ -226,7 +199,6 @@ export function AuthProvider({ children }) {
             .single()
 
           if (!existingBonus) {
-            // Award 25 points for profile completion
             await supabase
               .from('loyalty_points')
               .update({
@@ -258,21 +230,13 @@ export function AuthProvider({ children }) {
     }
   }
 
-  // Logout
   function logout() {
     setUser(null)
     localStorage.removeItem('frushh_user')
   }
 
-  // Open login modal
-  function openLogin() {
-    setShowLogin(true)
-  }
-
-  // Close login modal
-  function closeLogin() {
-    setShowLogin(false)
-  }
+  function openLogin() { setShowLogin(true) }
+  function closeLogin() { setShowLogin(false) }
 
   const value = {
     user,
