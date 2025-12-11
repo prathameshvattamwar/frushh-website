@@ -66,7 +66,7 @@ export function AuthProvider({ children }) {
       if (error) throw error
 
       // Return OTP and WhatsApp link
-      const whatsappNumber = '919271638630' // FRUSHH WhatsApp number
+      const whatsappNumber = '919271981229' // FRUSHH WhatsApp number
       const message = `My FRUSHH login OTP is: ${otp}`
       const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
 
