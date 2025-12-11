@@ -52,15 +52,22 @@ export function AuthProvider({ children }) {
   async function sendOTP(phone) {
     try {
       const otp = generateOTP()
-      const expiresAt = new Date(Date.now() + 5 * 60 * 1000) // 5 minutes
 
-      // Save OTP to database
+      // Mark all previous OTPs for this phone as used
+      await supabase
+        .from('otp_verifications')
+        .update({ is_used: true })
+        .eq('phone', phone)
+        .eq('is_used', false)
+
+      // Save new OTP to database (10 minutes expiry)
       const { error } = await supabase
         .from('otp_verifications')
         .insert({
           phone: phone,
           otp: otp,
-          expires_at: expiresAt.toISOString()
+          expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+          is_used: false
         })
 
       if (error) throw error
@@ -94,8 +101,12 @@ export function AuthProvider({ children }) {
         return { success: false, error: 'OTP not found. Please request a new one.' }
       }
 
-      // Check if expired
-      if (new Date(otpData.expires_at) < new Date()) {
+      // Check if expired (with 1 minute buffer for timezone issues)
+      const expiryTime = new Date(otpData.expires_at).getTime()
+      const currentTime = Date.now()
+      const bufferTime = 60 * 1000 // 1 minute buffer
+      
+      if (expiryTime + bufferTime < currentTime) {
         return { success: false, error: 'OTP expired. Please request a new one.' }
       }
 
