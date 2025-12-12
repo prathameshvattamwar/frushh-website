@@ -109,7 +109,7 @@ Order here: frushh.in`
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl w-full max-w-md max-h-[91vh] overflow-hidden shadow-2xl">
+      <div className="bg-white rounded-2xl w-full max-w-md max-h-[92.5vh] overflow-hidden shadow-2xl">
         {/* Header */}
         <div className="bg-gradient-to-r from-pink-500 to-purple-600 p-6 text-white relative">
           <button onClick={onClose} className="absolute right-4 top-4 w-8 h-8 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/30">
