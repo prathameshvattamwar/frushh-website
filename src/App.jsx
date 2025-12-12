@@ -243,7 +243,7 @@ function App() {
                     <p className="text-xs text-gray-500">{product.protein_350ml}g protein</p>
                   </div>
                 </div>
-                <button onClick={() => { setSelectedProduct(product); setIsProductModalOpen(true); }} className="w-full py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2">
+                <button onClick={() => { if (!user) { openLogin(); } else { setSelectedProduct(product); setIsProductModalOpen(true); } }} className="w-full py-2 bg-green-500 text-white font-medium rounded-lg hover:bg-green-600 transition flex items-center justify-center gap-2">
                   <i className="fa-solid fa-cart-plus"></i>
                   Add to Cart
                 </button>
