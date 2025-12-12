@@ -8,6 +8,7 @@ import CartSidebar from './components/cart/CartSidebar'
 import ProductModal from './components/products/ProductModal'
 import ProfilePage from './components/profile/ProfilePage'
 import ReferralPage from './components/referral/ReferralPage'
+import OrderHistoryPage from './components/orders/OrderHistoryPage'
 
 function App() {
   const [products, setProducts] = useState([])
@@ -21,6 +22,7 @@ function App() {
   const [isProductModalOpen, setIsProductModalOpen] = useState(false)
   const [isProfileOpen, setIsProfileOpen] = useState(false)
   const [isReferralOpen, setIsReferralOpen] = useState(false)
+  const [isOrderHistoryOpen, setIsOrderHistoryOpen] = useState(false)
 
   const { user, openLogin, logout } = useAuth()
   const { cartCount, openCart } = useCart()
@@ -131,6 +133,10 @@ function App() {
         isOpen={isReferralOpen} 
         onClose={() => setIsReferralOpen(false)} 
       />
+      <OrderHistoryPage 
+        isOpen={isOrderHistoryOpen} 
+        onClose={() => setIsOrderHistoryOpen(false)} 
+      />
 
       {/* Navbar */}
       <nav className="bg-white shadow-sm sticky top-0 z-40">
@@ -146,6 +152,10 @@ function App() {
               <button onClick={() => setIsReferralOpen(true)} className="hidden sm:flex items-center gap-2 px-3 py-2 bg-pink-100 text-pink-600 font-medium rounded-lg hover:bg-pink-200 transition">
                 <i className="fa-solid fa-gift"></i>
                 <span>Refer</span>
+              </button>
+              <button onClick={() => setIsOrderHistoryOpen(true)} className="hidden sm:flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-600 font-medium rounded-lg hover:bg-blue-200 transition">
+                <i className="fa-solid fa-receipt"></i>
+                <span>Orders</span>
               </button>
               <button onClick={() => setIsProfileOpen(true)} className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">
                 <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
