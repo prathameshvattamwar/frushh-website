@@ -40,7 +40,6 @@ export function CartProvider({ children }) {
     }
 
     setCartItems(prev => [...prev, cartItem])
-    setIsCartOpen(true)
   }
 
   // Remove item from cart
