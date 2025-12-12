@@ -1,6 +1,8 @@
 import { useCart } from '../../context/CartContext'
+import { useAuth } from '../../context/AuthContext'
 
 function CartSidebar() {
+  const { user, openLogin } = useAuth()
   const { cartItems, cartCount, cartTotal, isCartOpen, closeCart, removeFromCart, updateQuantity, clearCart } = useCart()
 
   const whatsapp = "https://wa.me/919271981229"
@@ -14,6 +16,10 @@ function CartSidebar() {
 
   function handleCheckout() {
     if (cartItems.length === 0) return
+    if (!user) {
+      openLogin()
+      return
+    }
 
     let message = "🥤 *FRUSHH ORDER*\n\n"
     
