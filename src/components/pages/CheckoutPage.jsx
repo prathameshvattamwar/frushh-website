@@ -315,10 +315,18 @@ function CheckoutPage() {
 
       // Update coupon usage
       if (appliedCoupon?.type === 'coupon') {
-        await supabase
+        const { data: couponData } = await supabase
           .from('coupons')
-          .update({ used_count: supabase.raw('used_count + 1') })
+          .select('used_count')
           .eq('id', appliedCoupon.coupon_id)
+          .single()
+
+        if (couponData) {
+          await supabase
+            .from('coupons')
+            .update({ used_count: (couponData.used_count || 0) + 1 })
+            .eq('id', appliedCoupon.coupon_id)
+        }
 
         await supabase
           .from('coupon_usage')
@@ -343,8 +351,18 @@ function CheckoutPage() {
             referred_order_id: order.id
           })
 
-        // Update referral code usage count
-        await supabase.rpc('increment_referral_count', { code_id: appliedCoupon.referral_code_id })
+        const { data: refData } = await supabase
+          .from('referral_codes')
+          .select('times_used')
+          .eq('id', appliedCoupon.referral_code_id)
+          .single()
+
+        if (refData) {
+          await supabase
+            .from('referral_codes')
+            .update({ times_used: (refData.times_used || 0) + 1 })
+            .eq('id', appliedCoupon.referral_code_id)
+        }
       }
 
       // Track first order usage
