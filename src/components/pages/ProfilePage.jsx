@@ -30,10 +30,10 @@ function ProfilePage() {
 
   async function fetchData() {
     try {
-      setName(user.name || '')
-      setPhone(user.phone ? user.phone.replace('91', '') : '')
-      setSelectedGym(user.preferred_gym || '')
-      setBirthday(user.birthday || '')
+      setName(user?.name || user?.user_metadata?.name || '')
+      setPhone(user?.phone ? user.phone.replace('91', '') : '')
+      setSelectedGym(user?.preferred_gym || '')
+      setBirthday(user?.birthday || '')
 
       const { data: gymsData } = await supabase.from('gyms').select('*').eq('is_active', true).order('display_order')
       if (gymsData) setGyms(gymsData)
@@ -49,7 +49,7 @@ function ProfilePage() {
 
       const { data: ordersData } = await supabase.from('orders').select('total').eq('user_id', user.id).eq('status', 'delivered')
       if (ordersData) {
-        setStats({ orders: ordersData.length, totalSpent: ordersData.reduce((sum, o) => sum + o.total, 0) })
+        setStats({ orders: ordersData.length, totalSpent: ordersData.reduce((sum, o) => sum + (o.total || 0), 0) })
       }
       setLoading(false)
     } catch (error) {
@@ -80,13 +80,13 @@ function ProfilePage() {
   }
 
   async function handleDeleteAddress(addressId) {
-    if (!confirm('Delete this address?')) return
+    if (!window.confirm('Delete this address?')) return
     await supabase.from('user_addresses').delete().eq('id', addressId)
     setAddresses(prev => prev.filter(a => a.id !== addressId))
   }
 
   function handleLogout() {
-    if (confirm('Are you sure you want to logout?')) {
+    if (window.confirm('Are you sure you want to logout?')) {
       logout()
       navigate('/')
     }
