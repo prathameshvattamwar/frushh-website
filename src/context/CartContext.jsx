@@ -4,13 +4,16 @@ const CartContext = createContext({})
 
 export function CartProvider({ children }) {
   const [cartItems, setCartItems] = useState([])
-  const [isCartOpen, setIsCartOpen] = useState(false)
 
   // Load cart from localStorage on mount
   useEffect(() => {
     const savedCart = localStorage.getItem('frushh_cart')
     if (savedCart) {
-      setCartItems(JSON.parse(savedCart))
+      try {
+        setCartItems(JSON.parse(savedCart))
+      } catch (e) {
+        localStorage.removeItem('frushh_cart')
+      }
     }
   }, [])
 
@@ -20,9 +23,10 @@ export function CartProvider({ children }) {
   }, [cartItems])
 
   // Add item to cart
-  function addToCart(product, size, addons = []) {
+  function addToCart(product, size, addons = [], quantity = 1) {
     const price = size === '250ml' ? product.price_250ml : product.price_350ml
     const protein = size === '250ml' ? product.protein_250ml : product.protein_350ml
+    const calories = size === '250ml' ? product.calories_250ml : product.calories_350ml
     const addonsTotal = addons.reduce((sum, addon) => sum + addon.price, 0)
 
     const cartItem = {
@@ -30,13 +34,15 @@ export function CartProvider({ children }) {
       productId: product.id,
       name: product.name,
       slug: product.slug,
+      icon: product.icon,
       size: size,
       price: price,
       protein: protein,
+      calories: calories,
       addons: addons,
       addonsTotal: addonsTotal,
-      totalPrice: price + addonsTotal,
-      quantity: 1
+      itemPrice: price + addonsTotal,
+      quantity: quantity
     }
 
     setCartItems(prev => [...prev, cartItem])
@@ -53,7 +59,9 @@ export function CartProvider({ children }) {
       removeFromCart(itemId)
       return
     }
-    setCartItems(prev => prev.map(item => 
+    if (newQuantity > 10) return
+
+    setCartItems(prev => prev.map(item =>
       item.id === itemId ? { ...item, quantity: newQuantity } : item
     ))
   }
@@ -65,23 +73,18 @@ export function CartProvider({ children }) {
 
   // Calculate totals
   const cartCount = cartItems.reduce((sum, item) => sum + item.quantity, 0)
-  const cartTotal = cartItems.reduce((sum, item) => sum + (item.totalPrice * item.quantity), 0)
-
-  // Open/Close cart
-  function openCart() { setIsCartOpen(true) }
-  function closeCart() { setIsCartOpen(false) }
+  const cartSubtotal = cartItems.reduce((sum, item) => sum + (item.itemPrice * item.quantity), 0)
+  const cartTotalProtein = cartItems.reduce((sum, item) => sum + (item.protein * item.quantity), 0)
 
   const value = {
     cartItems,
     cartCount,
-    cartTotal,
-    isCartOpen,
+    cartSubtotal,
+    cartTotalProtein,
     addToCart,
     removeFromCart,
     updateQuantity,
-    clearCart,
-    openCart,
-    closeCart
+    clearCart
   }
 
   return (
