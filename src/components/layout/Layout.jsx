@@ -12,7 +12,7 @@ function Layout({ children }) {
 
   // Don't show layout on admin pages
   if (isAdminPage) {
-    return <>{children}</>
+    return children
   }
 
   const navItems = [
@@ -20,7 +20,7 @@ function Layout({ children }) {
     { path: '/menu', icon: 'fa-utensils', label: 'Menu' },
     { path: '/cart', icon: 'fa-cart-shopping', label: 'Cart', badge: cartCount },
     { path: '/rewards', icon: 'fa-gift', label: 'Rewards' },
-    { path: '/profile', icon: 'fa-user', label: 'Profile' },
+    { path: '/profile', icon: 'fa-user', label: 'Profile' }
   ]
 
   return (
@@ -139,7 +139,7 @@ function Layout({ children }) {
       </main>
 
       {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-area-bottom">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
         <div className="flex items-center justify-around py-2">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path || 
