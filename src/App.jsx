@@ -10,6 +10,9 @@ import LoginPage from './components/pages/LoginPage'
 import MenuPage from './components/pages/MenuPage'
 import ProductDetailPage from './components/pages/ProductDetailPage'
 import CartPage from './components/pages/CartPage'
+import CheckoutPage from './components/pages/CheckoutPage'
+import OrderSuccessPage from './components/pages/OrderSuccessPage'
+import OrdersPage from './components/pages/OrdersPage'
 
 // Protected Route Component
 function ProtectedRoute({ children }) {
@@ -60,27 +63,33 @@ function App() {
         </Layout>
       } />
 
-      {/* Placeholder Routes - Will create tomorrow */}
       <Route path="/checkout" element={
         <Layout>
           <ProtectedRoute>
-            <ComingSoon title="Checkout" />
+            <CheckoutPage />
           </ProtectedRoute>
         </Layout>
+      } />
+
+      <Route path="/order-success" element={
+        <ProtectedRoute>
+          <OrderSuccessPage />
+        </ProtectedRoute>
       } />
 
       <Route path="/orders" element={
         <Layout>
           <ProtectedRoute>
-            <ComingSoon title="My Orders" />
+            <OrdersPage />
           </ProtectedRoute>
         </Layout>
       } />
 
+      {/* Placeholder Routes - Coming Soon */}
       <Route path="/rewards" element={
         <Layout>
           <ProtectedRoute>
-            <ComingSoon title="Rewards" />
+            <ComingSoon title="Rewards" icon="fa-gift" />
           </ProtectedRoute>
         </Layout>
       } />
@@ -88,7 +97,7 @@ function App() {
       <Route path="/refer" element={
         <Layout>
           <ProtectedRoute>
-            <ComingSoon title="Refer & Earn" />
+            <ComingSoon title="Refer & Earn" icon="fa-users" />
           </ProtectedRoute>
         </Layout>
       } />
@@ -96,7 +105,7 @@ function App() {
       <Route path="/subscriptions" element={
         <Layout>
           <ProtectedRoute>
-            <ComingSoon title="Subscriptions" />
+            <ComingSoon title="Subscriptions" icon="fa-repeat" />
           </ProtectedRoute>
         </Layout>
       } />
@@ -104,14 +113,14 @@ function App() {
       <Route path="/profile" element={
         <Layout>
           <ProtectedRoute>
-            <ComingSoon title="Profile" />
+            <ComingSoon title="Profile" icon="fa-user" />
           </ProtectedRoute>
         </Layout>
       } />
 
       <Route path="/admin/*" element={
         <ProtectedRoute>
-          <ComingSoon title="Admin Panel" isAdmin />
+          <ComingSoon title="Admin Panel" icon="fa-shield-halved" isAdmin />
         </ProtectedRoute>
       } />
 
@@ -121,13 +130,13 @@ function App() {
   )
 }
 
-// Coming Soon Component (Temporary)
-function ComingSoon({ title, isAdmin }) {
+// Coming Soon Component
+function ComingSoon({ title, icon, isAdmin }) {
   return (
     <div className={`min-h-[70vh] flex items-center justify-center px-4 ${isAdmin ? 'bg-gray-100' : ''}`}>
       <div className="text-center">
         <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <i className="fa-solid fa-hammer text-3xl text-green-500"></i>
+          <i className={`fa-solid ${icon || 'fa-hammer'} text-3xl text-green-500`}></i>
         </div>
         <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
         <p className="text-gray-500 mb-4">This page is coming soon!</p>
