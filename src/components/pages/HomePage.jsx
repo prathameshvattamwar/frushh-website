@@ -360,7 +360,7 @@ function HomePage() {
           </div>
 
           <div className="border-t border-gray-800 pt-8 text-center text-gray-500 text-sm">
-            <p>© 2024 FRUSHH. Made with <i className="fa-solid fa-heart text-red-500"></i> in Pune</p>
+            <p>© 2026 FRUSHH. Made with <i className="fa-solid fa-heart text-red-500"></i> in Pune</p>
           </div>
         </div>
       </footer>
