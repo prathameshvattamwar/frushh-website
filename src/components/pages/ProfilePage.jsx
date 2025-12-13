@@ -337,7 +337,7 @@ function ProfilePage() {
           </div>
         )}
 
-        {activeTab === 'rewards' && (
+                {activeTab === 'rewards' && (
           <div className="space-y-4">
             <div className="bg-gradient-to-br from-amber-600 to-amber-700 rounded-2xl p-6 text-white">
               <div className="flex items-center justify-between mb-4">
@@ -397,9 +397,10 @@ function ProfilePage() {
             </Link>
           </div>
         )}
-      </div>
-    </div>
+      </div> {/* closes max-w-2xl container */}
+    </div>   {/* closes outer page wrapper */}
   )
 }
 
 export default ProfilePage
+
