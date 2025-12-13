@@ -11,6 +11,8 @@ import CheckoutPage from './components/pages/CheckoutPage'
 import OrderSuccessPage from './components/pages/OrderSuccessPage'
 import OrdersPage from './components/pages/OrdersPage'
 import ProfilePage from './components/pages/ProfilePage'
+import RewardsPage from './components/pages/RewardsPage'
+import ReferPage from './components/pages/ReferPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -37,8 +39,8 @@ function App() {
       <Route path="/order-success" element={<ProtectedRoute><OrderSuccessPage /></ProtectedRoute>} />
       <Route path="/orders" element={<Layout><ProtectedRoute><OrdersPage /></ProtectedRoute></Layout>} />
       <Route path="/profile" element={<Layout><ProtectedRoute><ProfilePage /></ProtectedRoute></Layout>} />
-      <Route path="/rewards" element={<Layout><ProtectedRoute><ComingSoon title="Rewards" /></ProtectedRoute></Layout>} />
-      <Route path="/refer" element={<Layout><ProtectedRoute><ComingSoon title="Refer & Earn" /></ProtectedRoute></Layout>} />
+      <Route path="/rewards" element={<Layout><ProtectedRoute><RewardsPage /></ProtectedRoute></Layout>} />
+      <Route path="/refer" element={<Layout><ProtectedRoute><ReferPage /></ProtectedRoute></Layout>} />
       <Route path="/subscriptions" element={<Layout><ProtectedRoute><ComingSoon title="Subscriptions" /></ProtectedRoute></Layout>} />
       <Route path="/admin/*" element={<ProtectedRoute><ComingSoon title="Admin Panel" /></ProtectedRoute>} />
       <Route path="*" element={<Layout><NotFound /></Layout>} />
