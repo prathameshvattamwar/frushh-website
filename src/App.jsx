@@ -14,6 +14,7 @@ import ProfilePage from './components/pages/ProfilePage'
 import RewardsPage from './components/pages/RewardsPage'
 import ReferPage from './components/pages/ReferPage'
 import SubscriptionsPage from './components/pages/SubscriptionsPage'
+import AdminPage from './components/pages/AdminPage'
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
@@ -43,24 +44,9 @@ function App() {
       <Route path="/rewards" element={<Layout><ProtectedRoute><RewardsPage /></ProtectedRoute></Layout>} />
       <Route path="/refer" element={<Layout><ProtectedRoute><ReferPage /></ProtectedRoute></Layout>} />
       <Route path="/subscriptions" element={<Layout><ProtectedRoute><SubscriptionsPage /></ProtectedRoute></Layout>} />
-      <Route path="/admin/*" element={<ProtectedRoute><ComingSoon title="Admin Panel" /></ProtectedRoute>} />
+      <Route path="/admin" element={<ProtectedRoute><AdminPage /></ProtectedRoute>} />
       <Route path="*" element={<Layout><NotFound /></Layout>} />
     </Routes>
-  )
-}
-
-function ComingSoon({ title }) {
-  return (
-    <div className="min-h-[70vh] flex items-center justify-center px-4">
-      <div className="text-center">
-        <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <i className="fa-solid fa-hammer text-3xl text-green-500"></i>
-        </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
-        <p className="text-gray-500 mb-4">Coming soon!</p>
-        <a href="/" className="text-green-600 font-medium">Back to Home</a>
-      </div>
-    </div>
   )
 }
 
