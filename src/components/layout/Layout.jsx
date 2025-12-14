@@ -90,7 +90,23 @@ function Layout({ children }) {
         </div>
       </nav>
 
-      <a href="https://wa.me/919271981229" target="_blank" rel="noopener noreferrer" className="fixed bottom-24 md:bottom-6 right-4 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 transition z-40">
+      {/* Floating Admin Button - Mobile Only for Admin Users */}
+      {user?.is_admin && (
+        <NavLink
+          to="/admin"
+          className="md:hidden fixed bottom-24 left-4 w-12 h-12 bg-purple-600 rounded-full flex items-center justify-center shadow-lg hover:bg-purple-700 transition z-40"
+        >
+          <i className="fa-solid fa-shield-halved text-white text-xl"></i>
+        </NavLink>
+      )}
+
+      {/* Floating WhatsApp Button */}
+      
+        href="https://wa.me/919271981229"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-24 md:bottom-6 right-4 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg hover:bg-green-600 transition z-40"
+      >
         <i className="fa-brands fa-whatsapp text-white text-2xl"></i>
       </a>
     </div>
