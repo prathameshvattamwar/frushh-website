@@ -1,46 +1,30 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { supabase } from '../../lib/supabase'
 
 function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { user, sendOTP, verifyOTP, updateProfile } = useAuth()
 
-  const [step, setStep] = useState(1) // 1: email, 2: otp, 3: profile setup
+  const [step, setStep] = useState(1)
   const [email, setEmail] = useState('')
   const [otp, setOtp] = useState('')
-  const [generatedOtp, setGeneratedOtp] = useState('')
+  const [testOtp, setTestOtp] = useState('')
+  const [emailSent, setEmailSent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  // Profile setup
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
-  const [selectedGym, setSelectedGym] = useState('')
-  const [gyms, setGyms] = useState([])
 
-  // Redirect if already logged in
+  const from = location.state?.from || '/'
+
   useEffect(() => {
-    if (user && step !== 3) {
-      const from = location.state?.from || '/'
+    if (user && user.name && user.phone) {
       navigate(from, { replace: true })
     }
-  }, [user, step, navigate, location])
-
-  // Fetch gyms list
-  useEffect(() => {
-    async function fetchGyms() {
-      const { data } = await supabase
-        .from('gyms')
-        .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true })
-      if (data) setGyms(data)
-    }
-    fetchGyms()
-  }, [])
+  }, [user])
 
   async function handleSendOTP(e) {
     e.preventDefault()
@@ -48,10 +32,7 @@ function LoginPage() {
       setError('Please enter your email')
       return
     }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    if (!/\S+@\S+\.\S+/.test(email)) {
       setError('Please enter a valid email')
       return
     }
@@ -59,12 +40,15 @@ function LoginPage() {
     setLoading(true)
     setError('')
 
-    const result = await sendOTP(email)
-    
+    const result = await sendOTP(email.trim().toLowerCase())
+
     setLoading(false)
 
     if (result.success) {
-      setGeneratedOtp(result.otp) // For testing - remove in production
+      setEmailSent(result.emailSent)
+      if (!result.emailSent && result.otp) {
+        setTestOtp(result.otp)
+      }
       setStep(2)
     } else {
       setError(result.error || 'Failed to send OTP')
@@ -81,15 +65,14 @@ function LoginPage() {
     setLoading(true)
     setError('')
 
-    const result = await verifyOTP(email, otp)
-    
+    const result = await verifyOTP(email.trim().toLowerCase(), otp)
+
     setLoading(false)
 
     if (result.success) {
       if (result.isNewUser) {
-        setStep(3) // Go to profile setup
+        setStep(3)
       } else {
-        const from = location.state?.from || '/'
         navigate(from, { replace: true })
       }
     } else {
@@ -97,7 +80,7 @@ function LoginPage() {
     }
   }
 
-  async function handleProfileSetup(e) {
+  async function handleCompleteProfile(e) {
     e.preventDefault()
     if (!name.trim()) {
       setError('Please enter your name')
@@ -113,15 +96,12 @@ function LoginPage() {
 
     const result = await updateProfile({
       name: name.trim(),
-      phone: `91${phone}`,
-      preferred_gym: selectedGym,
-      birthday: null
+      phone: '91' + phone
     })
 
     setLoading(false)
 
     if (result.success) {
-      const from = location.state?.from || '/'
       navigate(from, { replace: true })
     } else {
       setError(result.error || 'Failed to update profile')
@@ -131,257 +111,196 @@ function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <div className="w-16 h-16 bg-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <i className="fa-solid fa-glass-water text-white text-3xl"></i>
           </div>
           <h1 className="text-2xl font-black text-gray-900">FRUSHH</h1>
-          <p className="text-gray-500 text-sm">Fresh Protein Shakes</p>
+          <p className="text-gray-500">Fresh Protein Shakes</p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* Step 1: Email Input */}
+        <div className="bg-white rounded-2xl shadow-xl p-6">
           {step === 1 && (
-            <div className="p-6">
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Welcome!</h2>
+            <form onSubmit={handleSendOTP}>
+              <h2 className="text-xl font-bold text-gray-900 mb-2">Login / Sign Up</h2>
               <p className="text-gray-500 text-sm mb-6">Enter your email to continue</p>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
-                  <i className="fa-solid fa-circle-exclamation"></i>
-                  {error}
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                  <i className="fa-solid fa-exclamation-circle mr-2"></i>{error}
                 </div>
               )}
 
-              <form onSubmit={handleSendOTP}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address
-                  </label>
-                  <div className="relative">
-                    <i className="fa-solid fa-envelope absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                    <input
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="your@email.com"
-                      className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-lg"
-                      autoFocus
-                    />
-                  </div>
-                </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                  autoFocus
+                />
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-4 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <i className="fa-solid fa-spinner fa-spin"></i>
-                      Sending OTP...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fa-solid fa-paper-plane"></i>
-                      Get OTP
-                    </>
-                  )}
-                </button>
-              </form>
-
-              <p className="text-center text-xs text-gray-400 mt-4">
-                By continuing, you agree to our Terms & Privacy Policy
-              </p>
-            </div>
-          )}
-
-          {/* Step 2: OTP Verification */}
-          {step === 2 && (
-            <div className="p-6">
-              <button 
-                onClick={() => { setStep(1); setOtp(''); setError(''); }}
-                className="flex items-center gap-2 text-gray-500 text-sm mb-4 hover:text-gray-700"
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition disabled:opacity-50"
               >
-                <i className="fa-solid fa-arrow-left"></i>
-                Change email
+                {loading ? (
+                  <><i className="fa-solid fa-spinner fa-spin mr-2"></i>Sending OTP...</>
+                ) : (
+                  <><i className="fa-solid fa-paper-plane mr-2"></i>Get OTP</>
+                )}
               </button>
 
+              <div className="mt-6 p-4 bg-green-50 rounded-xl">
+                <p className="text-sm text-green-800 font-medium mb-2">Why join FRUSHH?</p>
+                <ul className="text-sm text-green-700 space-y-1">
+                  <li><i className="fa-solid fa-check mr-2"></i>Get 50 welcome points</li>
+                  <li><i className="fa-solid fa-check mr-2"></i>₹25 off on first order</li>
+                  <li><i className="fa-solid fa-check mr-2"></i>Refer friends & earn more</li>
+                </ul>
+              </div>
+            </form>
+          )}
+
+          {step === 2 && (
+            <form onSubmit={handleVerifyOTP}>
               <h2 className="text-xl font-bold text-gray-900 mb-2">Verify OTP</h2>
               <p className="text-gray-500 text-sm mb-6">
-                Enter the 6-digit code sent to<br/>
-                <span className="font-medium text-gray-700">{email}</span>
+                {emailSent ? (
+                  <>Enter the 6-digit code sent to <strong>{email}</strong></>
+                ) : (
+                  <>Enter the OTP shown below</>
+                )}
               </p>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
-                  <i className="fa-solid fa-circle-exclamation"></i>
-                  {error}
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                  <i className="fa-solid fa-exclamation-circle mr-2"></i>{error}
                 </div>
               )}
 
-              {/* Testing OTP Display - Remove in production */}
-              {generatedOtp && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 text-sm">
-                  <i className="fa-solid fa-info-circle mr-2"></i>
-                  Test OTP: <span className="font-bold font-mono">{generatedOtp}</span>
+              {emailSent ? (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
+                  <i className="fa-solid fa-envelope-circle-check mr-2"></i>
+                  OTP sent to your email! Check inbox & spam folder.
+                </div>
+              ) : testOtp && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl text-yellow-800 text-sm">
+                  <i className="fa-solid fa-flask mr-2"></i>
+                  <strong>Test Mode OTP:</strong> <span className="font-mono text-lg">{testOtp}</span>
                 </div>
               )}
 
-              <form onSubmit={handleVerifyOTP}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Enter OTP
-                  </label>
-                  <input
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="000000"
-                    className="w-full px-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none text-2xl text-center font-mono tracking-[0.5em]"
-                    maxLength={6}
-                    autoFocus
-                  />
-                </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none text-center text-2xl font-bold tracking-widest"
+                  autoFocus
+                  maxLength={6}
+                />
+              </div>
 
-                <button
-                  type="submit"
-                  disabled={loading || otp.length !== 6}
-                  className="w-full py-4 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <i className="fa-solid fa-spinner fa-spin"></i>
-                      Verifying...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fa-solid fa-check"></i>
-                      Verify OTP
-                    </>
-                  )}
-                </button>
-              </form>
-
-              <button 
-                onClick={handleSendOTP}
-                className="w-full py-3 text-green-600 font-medium mt-4 hover:text-green-700"
+              <button
+                type="submit"
+                disabled={loading || otp.length !== 6}
+                className="w-full py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition disabled:opacity-50"
               >
-                <i className="fa-solid fa-rotate-right mr-2"></i>
-                Resend OTP
+                {loading ? (
+                  <><i className="fa-solid fa-spinner fa-spin mr-2"></i>Verifying...</>
+                ) : (
+                  <><i className="fa-solid fa-check mr-2"></i>Verify & Continue</>
+                )}
               </button>
-            </div>
+
+              <div className="mt-4 flex justify-between items-center text-sm">
+                <button
+                  type="button"
+                  onClick={() => { setStep(1); setOtp(''); setError(''); setTestOtp(''); }}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <i className="fa-solid fa-arrow-left mr-1"></i>Change email
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSendOTP}
+                  disabled={loading}
+                  className="text-green-600 hover:text-green-700 font-medium"
+                >
+                  <i className="fa-solid fa-rotate-right mr-1"></i>Resend OTP
+                </button>
+              </div>
+            </form>
           )}
 
-          {/* Step 3: Profile Setup (New Users) */}
           {step === 3 && (
-            <div className="p-6">
+            <form onSubmit={handleCompleteProfile}>
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <i className="fa-solid fa-party-horn text-3xl text-green-600"></i>
+                <div className="w-14 h-14 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <i className="fa-solid fa-star text-yellow-500 text-2xl"></i>
                 </div>
                 <h2 className="text-xl font-bold text-gray-900">Welcome to FRUSHH!</h2>
-                <p className="text-gray-500 text-sm">
-                  You earned <span className="font-bold text-green-600">50 points</span> signup bonus! 🎉
-                </p>
+                <p className="text-green-600 font-medium">+50 points credited!</p>
               </div>
 
               {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm flex items-center gap-2">
-                  <i className="fa-solid fa-circle-exclamation"></i>
-                  {error}
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
+                  <i className="fa-solid fa-exclamation-circle mr-2"></i>{error}
                 </div>
               )}
 
-              <form onSubmit={handleProfileSetup}>
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Name <span className="text-red-500">*</span>
-                  </label>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 outline-none"
+                  autoFocus
+                />
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                <div className="flex">
+                  <span className="px-4 py-3 bg-gray-100 border border-r-0 border-gray-200 rounded-l-xl text-gray-500">+91</span>
                   <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Enter your name"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
-                    autoFocus
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                    placeholder="9876543210"
+                    className="flex-1 px-4 py-3 border border-gray-200 rounded-r-xl focus:ring-2 focus:ring-green-500 outline-none"
+                    maxLength={10}
                   />
                 </div>
+              </div>
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number <span className="text-red-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium">+91</span>
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
-                      placeholder="9876543210"
-                      className="w-full pl-14 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none"
-                      maxLength={10}
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Your Gym (Optional)
-                  </label>
-                  <select
-                    value={selectedGym}
-                    onChange={(e) => setSelectedGym(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none bg-white"
-                  >
-                    <option value="">Select your gym</option>
-                    {gyms.map((gym) => (
-                      <option key={gym.id} value={gym.name}>
-                        {gym.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-4 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {loading ? (
-                    <>
-                      <i className="fa-solid fa-spinner fa-spin"></i>
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fa-solid fa-check"></i>
-                      Complete Setup & Get 25 Bonus Points
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition disabled:opacity-50"
+              >
+                {loading ? (
+                  <><i className="fa-solid fa-spinner fa-spin mr-2"></i>Saving...</>
+                ) : (
+                  <><i className="fa-solid fa-check mr-2"></i>Complete & Get 25 Bonus Points</>
+                )}
+              </button>
+            </form>
           )}
         </div>
 
-        {/* Benefits */}
-        <div className="mt-6 grid grid-cols-3 gap-3">
-          <div className="bg-white/50 rounded-xl p-3 text-center">
-            <i className="fa-solid fa-gift text-green-500 text-xl mb-1"></i>
-            <p className="text-xs text-gray-600">50 Points<br/>Signup Bonus</p>
-          </div>
-          <div className="bg-white/50 rounded-xl p-3 text-center">
-            <i className="fa-solid fa-percent text-green-500 text-xl mb-1"></i>
-            <p className="text-xs text-gray-600">₹25 Off<br/>First Order</p>
-          </div>
-          <div className="bg-white/50 rounded-xl p-3 text-center">
-            <i className="fa-solid fa-users text-green-500 text-xl mb-1"></i>
-            <p className="text-xs text-gray-600">Refer & Earn<br/>Rewards</p>
-          </div>
-        </div>
+        <p className="text-center text-gray-400 text-xs mt-6">
+          By continuing, you agree to our Terms & Privacy Policy
+        </p>
       </div>
     </div>
   )
