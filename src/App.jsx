@@ -14,6 +14,7 @@ import ProfilePage from './components/pages/ProfilePage'
 import RewardsPage from './components/pages/RewardsPage'
 import ReferPage from './components/pages/ReferPage'
 import SubscriptionsPage from './components/pages/SubscriptionsPage'
+import QuizPage from './components/pages/QuizPage'
 import AdminPage from './components/pages/AdminPage'
 
 function ProtectedRoute({ children }) {
@@ -35,6 +36,7 @@ function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={<Layout><HomePage /></Layout>} />
       <Route path="/menu" element={<Layout><MenuPage /></Layout>} />
+      <Route path="/quiz" element={<Layout><QuizPage /></Layout>} />
       <Route path="/product/:slug" element={<Layout><ProtectedRoute><ProductDetailPage /></ProtectedRoute></Layout>} />
       <Route path="/cart" element={<Layout><ProtectedRoute><CartPage /></ProtectedRoute></Layout>} />
       <Route path="/checkout" element={<Layout><ProtectedRoute><CheckoutPage /></ProtectedRoute></Layout>} />
