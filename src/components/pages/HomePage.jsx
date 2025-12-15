@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import Quiz from '../Quiz'
 
 function HomePage() {
   const [products, setProducts] = useState([])
@@ -43,10 +44,10 @@ function HomePage() {
               <i className="fa-solid fa-utensils"></i>
               View Menu
             </Link>
-            <Link to="/quiz" className="px-8 py-4 bg-white border-2 border-green-500 text-green-600 font-bold rounded-xl hover:bg-green-50 transition flex items-center justify-center gap-2">
-              <i className="fa-solid fa-wand-magic-sparkles"></i>
-              Find My Shake
-            </Link>
+            <a href="#quiz" className="px-8 py-4 bg-white border-2 border-green-500 text-green-600 font-bold rounded-xl hover:bg-green-50 transition flex items-center justify-center gap-2">
+              <i className="fa-solid fa-brain"></i>
+              Daily Quiz
+            </a>
           </div>
         </div>
       </section>
@@ -87,23 +88,8 @@ function HomePage() {
         </div>
       </section>
 
-      {/* Quiz CTA */}
-      <section className="px-4 py-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 md:p-8 text-white">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-              <div className="text-center md:text-left">
-                <h2 className="text-2xl font-bold mb-2">Not sure which shake?</h2>
-                <p className="text-purple-100">Take our 30-second quiz and find your perfect match!</p>
-              </div>
-              <Link to="/quiz" className="px-6 py-3 bg-white text-purple-600 font-bold rounded-xl hover:bg-purple-50 transition flex items-center gap-2">
-                <i className="fa-solid fa-wand-magic-sparkles"></i>
-                Take Quiz & Earn 15 pts
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Daily Quiz Section */}
+      <Quiz />
 
       {/* Featured Products */}
       <section className="px-4 py-8">
@@ -168,7 +154,7 @@ function HomePage() {
                 <span className="text-2xl font-black text-green-600">1</span>
               </div>
               <h3 className="font-bold text-gray-900 mb-2">Choose Your Shake</h3>
-              <p className="text-gray-500 text-sm">Pick from 10+ delicious flavors or take our quiz</p>
+              <p className="text-gray-500 text-sm">Pick from 10+ delicious flavors with real nutrition</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-green-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
@@ -221,7 +207,6 @@ function HomePage() {
               <div className="space-y-2 text-sm text-gray-400">
                 <Link to="/menu" className="block hover:text-white">Menu</Link>
                 <Link to="/subscriptions" className="block hover:text-white">Subscriptions</Link>
-                <Link to="/quiz" className="block hover:text-white">Find My Shake</Link>
                 <Link to="/rewards" className="block hover:text-white">Rewards</Link>
               </div>
             </div>
@@ -241,7 +226,7 @@ function HomePage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm text-gray-400">
-            <p>© 2026 FRUSHH. Made with ❤️ in Pune</p>
+            <p>© 2024 FRUSHH. Made with ❤️ in Pune</p>
           </div>
         </div>
       </footer>
