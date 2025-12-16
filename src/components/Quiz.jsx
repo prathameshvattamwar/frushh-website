@@ -25,11 +25,10 @@ function Quiz() {
 
   async function fetchTodayQuestion() {
     try {
-      const { data, error } = await supabase
+       const { data, error } = await supabase
         .from('quiz_questions')
         .select('*')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true })
+        .order('created_at', { ascending: true })
 
       if (data && data.length > 0) {
         // Use date to get consistent daily question
