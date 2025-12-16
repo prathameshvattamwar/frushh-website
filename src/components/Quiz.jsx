@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 
 function Quiz() {
+  const { user } = useAuth()
   const [question, setQuestion] = useState(null)
   const [selectedAnswer, setSelectedAnswer] = useState(null)
   const [isAnswered, setIsAnswered] = useState(false)
@@ -11,8 +13,15 @@ function Quiz() {
 
   useEffect(() => {
     fetchTodayQuestion()
-    loadStreak()
   }, [])
+
+  useEffect(() => {
+    if (user) {
+      loadUserStreak()
+    } else {
+      loadGuestStreak()
+    }
+  }, [user])
 
   async function fetchTodayQuestion() {
     try {
@@ -20,10 +29,14 @@ function Quiz() {
         .from('quiz_questions')
         .select('*')
         .eq('is_active', true)
+        .order('display_order', { ascending: true })
 
       if (data && data.length > 0) {
-        const randomIndex = Math.floor(Math.random() * data.length)
-        setQuestion(data[randomIndex])
+        // Use date to get consistent daily question
+        const today = new Date()
+        const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24))
+        const questionIndex = dayOfYear % data.length
+        setQuestion(data[questionIndex])
       }
       setLoading(false)
     } catch (err) {
@@ -32,15 +45,53 @@ function Quiz() {
     }
   }
 
-  function loadStreak() {
-    const savedStreak = localStorage.getItem('frushh_streak')
-    const lastAnswerDate = localStorage.getItem('frushh_last_answer')
+  async function loadUserStreak() {
+    if (!user) return
+
+    try {
+      const { data: streakData } = await supabase
+        .from('user_streaks')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+
+      if (streakData) {
+        setStreak(streakData.current_streak || 0)
+        
+        const today = new Date().toDateString()
+        const lastAnswer = streakData.last_answer_date ? new Date(streakData.last_answer_date).toDateString() : null
+
+        if (lastAnswer === today) {
+          setIsAnswered(true)
+          setIsCorrect(streakData.today_correct || false)
+          setSelectedAnswer(streakData.today_answer || null)
+        }
+      }
+    } catch (err) {
+      console.error('Error loading streak:', err)
+    }
+  }
+
+  function loadGuestStreak() {
+    const savedStreak = localStorage.getItem('frushh_guest_streak')
+    const lastAnswerDate = localStorage.getItem('frushh_guest_last_answer')
     const today = new Date().toDateString()
 
     if (lastAnswerDate === today) {
       setIsAnswered(true)
-      const wasCorrect = localStorage.getItem('frushh_today_correct') === 'true'
+      const wasCorrect = localStorage.getItem('frushh_guest_today_correct') === 'true'
+      const savedAnswer = localStorage.getItem('frushh_guest_today_answer')
       setIsCorrect(wasCorrect)
+      setSelectedAnswer(savedAnswer)
+    } else {
+      // New day - reset answered state but keep streak if consecutive
+      const yesterday = new Date()
+      yesterday.setDate(yesterday.getDate() - 1)
+      if (lastAnswerDate !== yesterday.toDateString()) {
+        // Streak broken
+        localStorage.setItem('frushh_guest_streak', '0')
+        setStreak(0)
+      }
     }
 
     if (savedStreak) {
@@ -48,7 +99,7 @@ function Quiz() {
     }
   }
 
-  function handleAnswer(option) {
+  async function handleAnswer(option) {
     if (isAnswered) return
 
     setSelectedAnswer(option)
@@ -58,16 +109,86 @@ function Quiz() {
     setIsCorrect(correct)
 
     const today = new Date().toDateString()
-    localStorage.setItem('frushh_last_answer', today)
-    localStorage.setItem('frushh_today_correct', correct.toString())
+    let newStreak = correct ? streak + 1 : 0
 
     if (correct) {
-      const newStreak = streak + 1
       setStreak(newStreak)
-      localStorage.setItem('frushh_streak', newStreak.toString())
     } else {
       setStreak(0)
-      localStorage.setItem('frushh_streak', '0')
+      newStreak = 0
+    }
+
+    if (user) {
+      // Save to database for logged in users
+      try {
+        const { data: existing } = await supabase
+          .from('user_streaks')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (existing) {
+          await supabase
+            .from('user_streaks')
+            .update({
+              current_streak: newStreak,
+              longest_streak: newStreak > (existing.longest_streak || 0) ? newStreak : existing.longest_streak,
+              last_answer_date: new Date().toISOString(),
+              today_correct: correct,
+              today_answer: option,
+              total_correct: correct ? (existing.total_correct || 0) + 1 : existing.total_correct,
+              total_answered: (existing.total_answered || 0) + 1
+            })
+            .eq('user_id', user.id)
+        } else {
+          await supabase
+            .from('user_streaks')
+            .insert({
+              user_id: user.id,
+              current_streak: newStreak,
+              longest_streak: newStreak,
+              last_answer_date: new Date().toISOString(),
+              today_correct: correct,
+              today_answer: option,
+              total_correct: correct ? 1 : 0,
+              total_answered: 1
+            })
+        }
+
+        // Award points for 7-day streak
+        if (newStreak === 7) {
+          const { data: pointsData } = await supabase
+            .from('loyalty_points')
+            .select('points_balance, total_earned')
+            .eq('user_id', user.id)
+            .single()
+
+          if (pointsData) {
+            await supabase
+              .from('loyalty_points')
+              .update({
+                points_balance: pointsData.points_balance + 100,
+                total_earned: pointsData.total_earned + 100
+              })
+              .eq('user_id', user.id)
+
+            await supabase.from('points_transactions').insert({
+              user_id: user.id,
+              points: 100,
+              type: 'quiz_streak',
+              description: '7-day quiz streak! FREE shake earned!'
+            })
+          }
+        }
+      } catch (err) {
+        console.error('Error saving streak:', err)
+      }
+    } else {
+      // Save to localStorage for guests
+      localStorage.setItem('frushh_guest_last_answer', today)
+      localStorage.setItem('frushh_guest_today_correct', correct.toString())
+      localStorage.setItem('frushh_guest_today_answer', option)
+      localStorage.setItem('frushh_guest_streak', newStreak.toString())
     }
   }
 
@@ -123,6 +244,7 @@ function Quiz() {
         <div className="flex justify-center items-center gap-2 mb-8">
           <span className="text-2xl">🔥</span>
           <span className="text-xl font-bold">Streak: {streak}/7 days</span>
+          {streak === 7 && <span className="ml-2 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-sm font-bold">🎉 FREE SHAKE!</span>}
         </div>
 
         <div className="max-w-md mx-auto mb-8">
@@ -141,7 +263,7 @@ function Quiz() {
         </div>
         
         <div className="bg-white rounded-3xl p-6 md:p-8 max-w-2xl mx-auto text-gray-900 shadow-2xl">
-          <div className="text-sm text-green-600 font-medium mb-2">TODAY&apos;S QUESTION</div>
+          <div className="text-sm text-green-600 font-medium mb-2">TODAY'S QUESTION</div>
           <h3 className="text-lg md:text-xl font-bold mb-6">{question.question}</h3>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -178,21 +300,31 @@ function Quiz() {
           {isAnswered && isCorrect && (
             <div className="mt-6 p-4 rounded-xl bg-green-100">
               <p className="text-green-700 font-bold text-lg">✅ Correct!</p>
-              <p className="text-green-600 text-sm mt-1">{question.explanation}</p>
-              <p className="text-green-600 mt-2">🔥 {7 - streak} more for FREE shake!</p>
+              {question.explanation && <p className="text-green-600 text-sm mt-1">{question.explanation}</p>}
+              {streak < 7 ? (
+                <p className="text-green-600 mt-2">🔥 {7 - streak} more days for FREE shake!</p>
+              ) : (
+                <p className="text-green-600 mt-2 font-bold">🎉 You earned a FREE ₹49 shake! Check Rewards.</p>
+              )}
             </div>
           )}
 
           {isAnswered && !isCorrect && (
             <div className="mt-6 p-4 rounded-xl bg-red-100">
               <p className="text-red-700 font-bold text-lg">❌ Wrong!</p>
-              <p className="text-red-600 text-sm mt-1">{question.explanation}</p>
-              <p className="text-red-600 mt-2">Streak reset! Try tomorrow 💪</p>
+              {question.explanation && <p className="text-red-600 text-sm mt-1">{question.explanation}</p>}
+              <p className="text-red-600 mt-2">Streak reset! Try again tomorrow 💪</p>
             </div>
+          )}
+
+          {!user && (
+            <p className="mt-4 text-sm text-gray-500">
+              <a href="/login" className="text-green-600 font-medium hover:underline">Login</a> to save your streak & earn rewards!
+            </p>
           )}
         </div>
 
-        <p className="text-white/70 text-sm mt-6">New question every day!</p>
+        <p className="text-white/70 text-sm mt-6">New question every day at midnight!</p>
       </div>
     </section>
   )
